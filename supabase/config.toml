@@ -1,0 +1,4 @@
+project_id = ""
+
+[functions.manage-exam-access]
+verify_jwt = false
