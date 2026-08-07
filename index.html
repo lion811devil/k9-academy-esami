@@ -1,0 +1,815 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>K9 Academy — Esami · Release 1.11</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+:root{--p:#5b21b6;--bg:#f5f3f8;--card:#fff;--line:#e5ddec;--ok:#15803d;--okbg:#dcfce7;--err:#b91c1c;--errbg:#fee2e2;--muted:#6b6472}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#251d2b}header{background:linear-gradient(135deg,#35106f,#7c3aed);color:#fff;padding:20px}.wrap{max-width:1150px;margin:auto;padding:16px}.card,.bar{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.spacer{flex:1}.btn{border:0;border-radius:11px;padding:11px 14px;font-weight:800;cursor:pointer}.primary{background:var(--p);color:#fff}.ghost{background:#eee8f5}.danger{background:#b91c1c;color:#fff}.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px}.timer{font-size:30px;font-weight:900}.timer.danger{color:var(--err);background:none}.progress{height:12px;background:#eee;border-radius:99px;overflow:hidden}.progress div{height:100%;background:#7c3aed}.q{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;margin:12px 0}.meta,.status{font-size:13px;color:var(--muted)}.options{display:grid;gap:8px}.opt{border:2px solid var(--line);background:#fff;border-radius:11px;padding:12px;text-align:left;cursor:pointer}.opt.correct{background:var(--okbg);border-color:var(--ok);color:#14532d}.opt.wrong{background:var(--errbg);border-color:var(--err);color:#7f1d1d}.feedback{font-weight:800;margin-top:8px}.ok{color:var(--ok)}.err{color:var(--err)}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}.badge{display:inline-block;padding:4px 8px;border-radius:99px;background:#ede9fe;font-weight:700}.criteria{display:grid;gap:10px}.criterion{padding:10px;border:1px solid var(--line);border-radius:12px}.rating{display:flex;gap:6px}.rating button{min-width:42px}.rating button.selected{background:var(--p);color:#fff}.practice-total{margin:10px 0 16px;padding:10px 12px;border-radius:10px;background:#f3eef9;font-size:16px}.practice-disabled{opacity:.55;cursor:not-allowed}.settings-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.settings-tab{background:#eee8f5}.settings-tab.active{background:var(--p);color:#fff}.settings-pane{display:none}.settings-pane.active{display:block}.preview-box{border:1px dashed var(--line);border-radius:16px;padding:16px;background:var(--card)}.logo-preview{max-width:180px;max-height:90px;object-fit:contain;display:none}.compact .card,.compact .bar{padding:10px;margin-bottom:9px}.compact input,.compact select,.compact textarea{padding:8px}.compact .btn{padding:8px 11px}.square-ui .card,.square-ui .bar,.square-ui input,.square-ui select,.square-ui textarea,.square-ui .btn,.square-ui .q,.square-ui .opt{border-radius:4px}.dark-ui{--bg:#141018;--card:#211a28;--line:#40344a;--muted:#b9aebe;color:#f7f1fa}.dark-ui body{color:#f7f1fa}.dark-ui .ghost,.dark-ui .settings-tab{background:#342a3d;color:#fff}.dark-ui input,.dark-ui select,.dark-ui textarea,.dark-ui .opt,.dark-ui .q{background:#1b1621;color:#fff}.header-brand{display:flex;align-items:center;gap:14px}.header-logo{max-width:92px;max-height:72px;object-fit:contain;display:none}.dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}.stat-card b{display:block;font-size:30px;margin-top:6px}.empty-state{padding:16px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center}.field-error{border-color:var(--err)!important;box-shadow:0 0 0 2px rgba(185,28,28,.12)}.config-ok{color:var(--ok)}
+.app-block{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:14px;overflow:hidden}
+.app-block>summary{list-style:none;cursor:pointer;padding:16px 18px;font-weight:900;display:flex;align-items:center;gap:10px;background:color-mix(in srgb,var(--card) 92%,var(--p) 8%)}
+.app-block>summary::-webkit-details-marker{display:none}.app-block>summary::after{content:"⌄";margin-left:auto;font-size:20px;transition:.2s}.app-block[open]>summary::after{transform:rotate(180deg)}
+.app-block .block-body{padding:16px;border-top:1px solid var(--line)}.app-block .block-body>.card{border:0;padding:0;margin:0;background:transparent}
+.automation-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;margin-bottom:14px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.auto-dot{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(21,128,61,.12)}
+.auto-state{font-size:13px;color:var(--muted)}.auto-state b{color:var(--ok)}
+.auto-generated{background:#f0fdf4!important;border-color:#86efac!important}.block-hint{margin:0 0 12px;color:var(--muted);font-size:13px}
+.block-badge{margin-left:6px;padding:3px 7px;border-radius:99px;background:#ede9fe;color:var(--p);font-size:11px}
+@media(max-width:850px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){.dashboard-grid{grid-template-columns:1fr 1fr}}@media(max-width:720px){.grid{grid-template-columns:1fr}.btn{width:100%}.settings-tabs .btn{width:auto}}
+.click-select{cursor:pointer;transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
+.click-select:hover{border-color:var(--p);box-shadow:0 0 0 2px color-mix(in srgb,var(--p) 14%,transparent)}
+.click-select:active{transform:scale(.995)}
+.click-select.selected-card{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 18%,transparent)}
+.settings-pane .grid>label,.grid>label{display:block;padding:10px;border:1px solid transparent;border-radius:12px;cursor:pointer}
+.settings-pane .grid>label:hover,.grid>label:hover{border-color:var(--line);background:color-mix(in srgb,var(--card) 94%,var(--p) 6%)}
+.settings-pane .grid>label:focus-within,.grid>label:focus-within{border-color:var(--p);box-shadow:0 0 0 2px color-mix(in srgb,var(--p) 14%,transparent)}
+.stat-card{cursor:pointer;user-select:none}.stat-card.selected-card{outline:3px solid color-mix(in srgb,var(--p) 25%,transparent)}
+
+/* RELEASE 1.5 — navigazione a pagine laterali */
+.workspace-shell{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start;margin-top:14px}
+.side-nav{position:sticky;top:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;max-height:calc(100vh - 24px);overflow:auto;z-index:20}
+.side-nav-title{font-weight:900;padding:10px 12px 8px;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+.side-nav-group{margin:4px 0 10px}
+.side-nav-btn{width:100%;display:flex;align-items:center;gap:10px;border:0;border-radius:12px;padding:12px;text-align:left;background:transparent;color:inherit;font-weight:800;cursor:pointer}
+.side-nav-btn:hover{background:color-mix(in srgb,var(--card) 86%,var(--p) 14%)}
+.side-nav-btn.active{background:var(--p);color:#fff}
+.side-nav-btn .nav-dot{width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.72;flex:0 0 auto}
+.workspace-main{min-width:0}
+.workspace-toolbar{display:none;position:sticky;top:0;z-index:35;margin-bottom:10px;background:var(--bg);padding:8px 0}
+.mobile-menu-btn{width:100%;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:13px;background:var(--card);padding:12px 14px;font-weight:900;color:inherit}
+.workspace-content>section{display:contents}
+.app-page{display:none!important;margin:0!important}
+.app-page.active-page{display:block!important;animation:pageIn .16s ease-out}
+.app-page>.page-heading{display:flex;align-items:center;gap:10px;margin:0 0 14px}
+.page-heading h2{margin:0}
+.page-role-badge{display:inline-block;border-radius:99px;padding:4px 8px;background:#ede9fe;color:#5b21b6;font-size:12px;font-weight:800}
+.page-mobile-nav{display:flex;gap:8px;margin-top:14px}
+.page-mobile-nav .btn{flex:1}
+.side-backdrop{display:none}
+@keyframes pageIn{from{opacity:.4;transform:translateX(8px)}to{opacity:1;transform:none}}
+@media(max-width:860px){
+  .workspace-shell{display:block;margin-top:10px}
+  .workspace-toolbar{display:block}
+  .side-nav{position:fixed;left:0;top:0;bottom:0;width:min(82vw,320px);max-height:none;border-radius:0 18px 18px 0;transform:translateX(-105%);transition:transform .2s ease;z-index:1002;padding-top:18px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+  .side-nav.open{transform:translateX(0)}
+  .side-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:1001}
+  .side-backdrop.open{display:block}
+  .app-page{min-height:calc(100vh - 220px)}
+}
+@media(min-width:861px){
+  .page-mobile-nav{display:none}
+}
+
+
+#staffPanel,#adminPanel{margin:0;padding:0}
+.workspace-content .card.app-page{border:1px solid var(--line);border-radius:16px;padding:18px;background:var(--card)}
+
+
+
+input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),select,textarea{cursor:pointer}
+input:focus,select:focus,textarea:focus{cursor:text}
+select:focus{cursor:pointer}
+
+
+
+
+
+
+select{
+  appearance:auto;
+  -webkit-appearance:auto;
+  cursor:pointer;
+  background:var(--card);
+}
+select option{background:var(--card);color:var(--text)}
+
+
+.compact-select,select{
+  width:100%;
+  min-height:52px;
+  padding:0 14px;
+  border:1.5px solid var(--line);
+  border-radius:14px;
+  background:var(--card);
+  color:var(--text);
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+  appearance:auto;
+  -webkit-appearance:menulist;
+  box-shadow:none;
+}
+.compact-select:focus,select:focus{
+  outline:none;
+  border-color:var(--p);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 14%,transparent);
+}
+.removed-quick-choices,.removed-quick-choice{display:none!important}
+
+.sync-linked::after{content:"Sincronizzato";float:right;font-size:11px;font-weight:800;color:#15803d;background:#dcfce7;border-radius:999px;padding:3px 7px}
+
+
+/* RELEASE 1.11 — pagine a pulsanti superiori e identità visiva per ruolo */
+:root{--role-accent:var(--p);--role-soft:#f3eef9}
+body.role-super_admin{--role-accent:#6d28d9;--role-soft:#f3e8ff}
+body.role-vice_admin{--role-accent:#0369a1;--role-soft:#e0f2fe}
+body.role-teacher{--role-accent:#15803d;--role-soft:#dcfce7}
+body.role-examiner{--role-accent:#c2410c;--role-soft:#ffedd5}
+body.role-student{--role-accent:#0f766e;--role-soft:#ccfbf1}
+.role-identity{display:flex;align-items:center;gap:9px;margin-top:8px;padding:9px 12px;border-radius:12px;background:var(--role-soft);color:var(--role-accent);font-weight:900}
+.role-identity-dot{width:10px;height:10px;border-radius:50%;background:var(--role-accent);flex:0 0 auto}
+.role-page-badge{background:var(--role-soft)!important;color:var(--role-accent)!important}
+.top-workspace{margin-top:14px}
+.top-page-nav-wrap{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px);padding:8px 0 10px}
+.top-page-nav{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.top-page-nav::-webkit-scrollbar{display:none}
+.top-page-btn{flex:0 0 auto;border:1px solid var(--line);border-radius:999px;background:var(--card);color:inherit;padding:10px 14px;font-weight:900;cursor:pointer;white-space:nowrap}
+.top-page-btn.active{background:var(--role-accent);border-color:var(--role-accent);color:#fff}
+.top-workspace-content>.app-page{display:none!important;margin:0!important}
+.top-workspace-content>.app-page.active-page{display:block!important;animation:pageIn .16s ease-out}
+.workspace-shell,.side-nav,.workspace-toolbar,.side-backdrop{display:none!important}
+.page-mobile-nav{display:none!important}
+.btn.danger{background:#b91c1c;color:white;border-color:#b91c1c}
+.btn.danger:disabled{opacity:.45;cursor:not-allowed}
+.session-actions{margin:12px 0}
+
+</style></head><body>
+<header><div class="wrap"><div class="header-brand"><img id="appLogo" class="header-logo" alt="Logo"><div><h1 id="appTitle">K9 Academy</h1><div id="appSubtitle">Dogsitter · Mantrailing · HRDD · Detection</div></div></div></div></header><main class="wrap">
+<section class="bar"><b id="who">Non autenticato</b><span id="role"></span><span class="spacer"></span><button class="btn ghost" id="configBtn">Configura Supabase</button><button class="btn ghost hidden" id="logoutBtn">Esci</button></section><div id="notice" class="status"></div>
+<section class="card" id="authCard"><h2>Accesso</h2><div class="bar" style="padding:0;border:0"><button class="btn primary" id="studentLoginTab">Corsista</button><button class="btn ghost" id="staffLoginTab">Docente / Esaminatore / Amministratore</button></div><div id="studentLoginBox"><div class="grid"><label>Username sessione<input id="sessionUsername" autocomplete="username"></label><label>Password personale<input id="candidatePassword" type="password" autocomplete="current-password"></label></div><p class="status">Usa le credenziali fornite dal Super Amministratore.</p><button class="btn primary" id="candidateLoginBtn">Accedi all’esame</button></div><div id="staffLoginBox" class="hidden"><div class="grid"><label>Email amministrativa<input id="email" type="email"></label><label>Password<input id="password" type="password"></label></div><br><button class="btn primary" id="loginBtn">Accedi</button></div></section>
+<section id="studentPanel" class="hidden"><div class="card" id="assignmentCard"><h2>Esame assegnato</h2><div id="assignmentInfo">Nessun esame assegnato.</div><br><button class="btn primary hidden" id="startBtn">Inizia o riprendi l’esame</button></div><div class="card hidden" id="examHeader"><div class="bar" style="padding:0;border:0;margin:0"><div><h2 id="examTitle">Prova teorica</h2><div id="examMeta"></div></div><span class="spacer"></span><div class="timer" id="timer">--:--</div></div><div class="progress"><div id="progress" style="width:0"></div></div><p><b id="answered">0</b> risposte registrate</p><button class="btn danger" id="submitBtn">Consegna prova</button></div><div id="questions"></div><div class="card hidden" id="resultCard"><h2>Risultato</h2><div id="result"></div></div></section>
+<div id="automationBar" class="automation-bar hidden"><span class="auto-dot"></span><b>Automazioni attive</b><span class="auto-state">Aggiornamento dati automatico ogni <b>30 secondi</b> e al ritorno nell’app.</span><span class="spacer"></span><span id="lastAutoRefresh" class="status">—</span></div><section id="staffPanel" class="hidden"><div class="card"><div class="bar" style="padding:0;border:0;margin:0 0 12px"><div><h2 style="margin:0">Dashboard</h2><div class="status">Situazione aggiornata della piattaforma</div></div><span class="spacer"></span><button class="btn ghost" id="refreshDashboard">Aggiorna dashboard</button></div><div class="dashboard-grid"><div class="stat-card"><span>Corsisti</span><b id="dashStudents">—</b></div><div class="stat-card"><span>Esami aperti</span><b id="dashOpenExams">—</b></div><div class="stat-card"><span>Esami conclusi</span><b id="dashCompletedExams">—</b></div><div class="stat-card"><span>Sessioni attive</span><b id="dashActiveSessions">—</b></div></div></div><div class="card" id="assignExamCard"><h2>Assegna esame teorico</h2><p class="block-hint">Domande, timer e soglia vengono caricati automaticamente in base alla disciplina.</p><div class="grid"><label>Corsista<select id="studentSelect"></select></label><label>Disciplina<select id="assignDiscipline"><option value="dogsitter">Dogsitter</option><option value="mantrailing">Mantrailing</option><option value="hrdd">HRDD</option><option value="detection">Detection</option></select></label><label>Numero domande<select id="assignQuestions" class="compact-select"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40" selected>40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option><option value="60">60</option><option value="65">65</option><option value="70">70</option><option value="75">75</option><option value="80">80</option><option value="85">85</option><option value="90">90</option><option value="95">95</option><option value="100">100</option></select></label><label>Timer, minuti<select id="assignDuration" class="compact-select"><option value="5">5 min</option><option value="10">10 min</option><option value="15">15 min</option><option value="20">20 min</option><option value="25">25 min</option><option value="30">30 min</option><option value="35">35 min</option><option value="40">40 min</option><option value="45" selected>45 min</option><option value="50">50 min</option><option value="55">55 min</option><option value="60">60 min</option><option value="65">65 min</option><option value="70">70 min</option><option value="75">75 min</option><option value="80">80 min</option><option value="85">85 min</option><option value="90">90 min</option><option value="95">95 min</option><option value="100">100 min</option><option value="105">105 min</option><option value="110">110 min</option><option value="115">115 min</option><option value="120">120 min</option></select></label><label>Soglia di superamento %<select id="assignPass" class="compact-select"><option value="50">50%</option><option value="55">55%</option><option value="60" selected>60%</option><option value="65">65%</option><option value="70">70%</option><option value="75">75%</option><option value="80">80%</option><option value="85">85%</option><option value="90">90%</option><option value="95">95%</option><option value="100">100%</option></select></label><label>Note<textarea id="assignNotes"></textarea></label></div><br><button class="btn primary" id="assignBtn">Assegna al Corsista</button></div><div class="card"><h2>Esami e valutazioni</h2><button class="btn ghost" id="refreshExams">Aggiorna</button><div style="overflow:auto"><table><thead><tr><th>Corsista</th><th>Disciplina</th><th>Stato</th><th>Teoria</th><th>Esaminatore</th><th>Pratica</th><th>Data</th></tr></thead><tbody id="examRows"></tbody></table></div></div></section>
+<section id="adminPanel" class="hidden"><div class="card super-only" id="bankAdminCard"><h2>Banche domande</h2><div id="bankStats" class="grid"></div></div><div class="card manager-card" id="sessionCreateCard"><h2>Sessioni d’esame</h2><p class="block-hint">Nome, username e parametri vengono proposti automaticamente. Puoi sempre modificarli.</p><div class="grid"><label>Nome sessione<input id="sessionTitle"></label><label>Username comune<input id="commonUsername"></label><label>Disciplina<select id="sessionDiscipline"><option value="dogsitter">Dogsitter</option><option value="mantrailing">Mantrailing</option><option value="hrdd">HRDD</option><option value="detection">Detection</option></select></label><label>Domande<select id="sessionQuestions" class="compact-select"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40" selected>40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option><option value="60">60</option><option value="65">65</option><option value="70">70</option><option value="75">75</option><option value="80">80</option><option value="85">85</option><option value="90">90</option><option value="95">95</option><option value="100">100</option></select></label><label>Timer minuti<select id="sessionDuration" class="compact-select"><option value="5">5 min</option><option value="10">10 min</option><option value="15">15 min</option><option value="20">20 min</option><option value="25">25 min</option><option value="30">30 min</option><option value="35">35 min</option><option value="40">40 min</option><option value="45" selected>45 min</option><option value="50">50 min</option><option value="55">55 min</option><option value="60">60 min</option><option value="65">65 min</option><option value="70">70 min</option><option value="75">75 min</option><option value="80">80 min</option><option value="85">85 min</option><option value="90">90 min</option><option value="95">95 min</option><option value="100">100 min</option><option value="105">105 min</option><option value="110">110 min</option><option value="115">115 min</option><option value="120">120 min</option></select></label><label>Soglia %<select id="sessionPass" class="compact-select"><option value="50">50%</option><option value="55">55%</option><option value="60" selected>60%</option><option value="65">65%</option><option value="70">70%</option><option value="75">75%</option><option value="80">80%</option><option value="85">85%</option><option value="90">90%</option><option value="95">95%</option><option value="100">100%</option></select></label><label>Note<textarea id="sessionNotes"></textarea></label></div><br><button class="btn primary" id="createSessionBtn">Crea sessione</button></div><div class="card manager-card" id="candidateCreateCard"><h2>Crea Corsista</h2><p class="block-hint">Seleziona la sessione e inserisci il nome: codice candidato e password vengono generati automaticamente.</p><div class="grid"><label>Sessione<select id="candidateSession"></select></label><label>Nome e cognome<input id="candidateName"></label><label>Codice candidato<input id="candidateCode"></label><label>Password personale<input id="newCandidatePassword" type="text"></label></div><br><button class="btn primary" id="createCandidateBtn">Crea credenziali</button><div id="credentialResult"></div></div><div class="card manager-card" id="sessionListCard"><h2>Sessioni create</h2>
+<p class="block-hint">Seleziona la sessione da gestire. L'eliminazione rimuove la sessione e gli account Corsista collegati.</p>
+<div class="grid"><label>Sessione selezionata<select id="sessionDeleteSelect"></select></label></div>
+<div class="bar session-actions"><button class="btn ghost" id="refreshSessions">Aggiorna</button><button class="btn danger" id="deleteSelectedSession" disabled>Elimina sessione selezionata</button></div>
+<div style="overflow:auto"><table><thead><tr><th>Sessione</th><th>Username</th><th>Disciplina</th><th>Corsisti</th></tr></thead><tbody id="sessionRows"></tbody></table></div></div>
+<div class="card manager-card" id="userCreateCard">
+<h2>Crea utente</h2>
+<p class="block-hint">Super e Vice possono creare Docenti, Esaminatori e Vice. Solo il Super Amministratore può creare un altro Super Amministratore.</p>
+<div class="grid">
+<label>Nome e cognome<input id="newStaffName" autocomplete="name"></label>
+<label>Email<input id="newStaffEmail" type="email" autocomplete="off"></label>
+<label>Ruolo<select id="newStaffRole"><option value="teacher">Docente</option><option value="examiner">Esaminatore</option><option value="vice_admin">Vice Amministratore</option><option value="super_admin" data-super-option="1">Super Amministratore</option></select></label>
+<label>Password provvisoria<input id="newStaffPassword" type="text" minlength="8"></label>
+</div><br><button type="button" class="btn primary" id="createStaffUserBtn">Crea utente</button>
+</div>
+<div class="card super-only" id="settingsCard"><h2>Impostazioni</h2><p class="status">Configurazione centralizzata dell’app. Le modifiche vengono salvate su Supabase e applicate a tutti gli utenti.</p>
+<div class="settings-tabs">
+<button class="btn settings-tab active" data-pane="identityPane">Identità app</button>
+<button class="btn settings-tab" data-pane="appearancePane">Aspetto</button>
+<button class="btn settings-tab" data-pane="behaviorPane">Comportamento</button>
+<button class="btn settings-tab" data-pane="examPane">Esami</button>
+<button class="btn settings-tab" data-pane="securityPane">Sicurezza e password</button>
+</div>
+<div id="identityPane" class="settings-pane active"><div class="grid">
+<label>Nome app<input id="cfgAppName" value="K9 Academy"></label>
+<label>Sottotitolo<input id="cfgAppSubtitle" value="Dogsitter · Mantrailing · HRDD · Detection"></label>
+<label>URL logo<input id="cfgLogoUrl" placeholder="https://..."></label>
+<label>Testo accesso Corsista<input id="cfgStudentHelp" value="Usa le credenziali fornite dal Super Amministratore."></label>
+<label>Testo piè di pagina<input id="cfgFooterText" value="K9 Academy — Piattaforma esami · Release 1.11"></label>
+<label>Nome organizzazione<input id="cfgOrganization" value="K9 Academy"></label>
+</div><div class="preview-box"><img id="logoPreview" class="logo-preview" alt="Anteprima logo"><h3 id="previewTitle">K9 Academy</h3><p id="previewSubtitle">Dogsitter · Mantrailing · HRDD · Detection</p></div></div>
+<div id="appearancePane" class="settings-pane"><div class="grid">
+<label>Colore principale<input id="cfgPrimary" type="color" value="#5b21b6"></label>
+<label>Colore intestazione<input id="cfgHeader" type="color" value="#35106f"></label>
+<label>Colore sfondo<input id="cfgBackground" type="color" value="#f5f3f8"></label>
+<label>Colore schede<input id="cfgCard" type="color" value="#ffffff"></label>
+<label>Tema<select id="cfgTheme"><option value="light">Chiaro</option><option value="dark">Scuro</option><option value="system">Sistema</option></select></label>
+<label>Densità<select id="cfgDensity"><option value="comfortable">Comoda</option><option value="compact">Compatta</option></select></label>
+<label>Angoli<select id="cfgCorners"><option value="rounded">Arrotondati</option><option value="square">Squadrati</option></select></label>
+<label>Larghezza massima<input id="cfgMaxWidth" type="number" min="760" max="1600" value="1150"></label>
+</div></div>
+<div id="behaviorPane" class="settings-pane"><div class="grid">
+<label>Mostra risultato al Corsista<select id="cfgShowResult"><option value="true">Sì</option><option value="false">No</option></select></label>
+<label>Mostra correzione immediata<select id="cfgImmediateFeedback"><option value="true">Sì</option><option value="false">No</option></select></label>
+<label>Mostra spiegazione risposta<select id="cfgShowExplanation"><option value="true">Sì</option><option value="false">No</option></select></label>
+<label>Conferma prima della consegna<select id="cfgConfirmSubmit"><option value="true">Sì</option><option value="false">No</option></select></label>
+<label>Avviso timer residuo, minuti<input id="cfgTimerWarning" type="number" min="1" max="30" value="5"></label>
+<label>Consenti Docente ad assegnare esami<select id="cfgTeacherAssign"><option value="true">Sì</option><option value="false">No</option></select></label>
+</div></div>
+<div id="examPane" class="settings-pane"><div id="settings"></div></div>
+<div id="securityPane" class="settings-pane">
+  <div class="card" style="margin:0 0 14px">
+    <h3>Password Super Amministratore</h3>
+    <p class="status">Solo il Super Amministratore può modificare password.</p>
+    <div class="grid"><label>Nuova password<input id="superOwnNewPassword" type="password" minlength="8"></label><label>Conferma password<input id="superOwnNewPasswordConfirm" type="password" minlength="8"></label></div><br>
+    <button type="button" class="btn primary" id="saveSuperOwnPassword">Cambia la mia password</button>
+  </div>
+  <div class="card" style="margin:0">
+    <h3>Utenti, ruoli e password</h3>
+    <p class="status">Solo il Super Amministratore può modificare ruoli e password.</p>
+    <div style="overflow:auto"><table><thead><tr><th>Nome</th><th>Account</th><th>Ruolo</th><th>Password</th></tr></thead><tbody id="userRows"></tbody></table></div>
+  </div>
+</div>
+
+<br><div class="bar" style="padding:0;border:0"><button class="btn primary" id="saveAllSettings">Salva tutte le impostazioni</button><button class="btn ghost" id="resetAppSettings">Ripristina grafica predefinita</button></div>
+</div></section>
+<dialog id="practiceDialog"><form method="dialog" class="card" style="min-width:min(820px,94vw)"><h2 id="practiceTitle">Valutazione pratica</h2><p class="status">Valuta ogni voce da 1 a 5. Tutti i criteri sono obbligatori.</p><h3>Competenze pratiche</h3><div id="practiceCriteria" class="criteria"></div><div class="practice-total">Pratica: <b id="practiceLiveScore">0/50</b></div><h3>Professionalità</h3><div id="professionalCriteria" class="criteria"></div><div class="practice-total">Professionalità: <b id="professionalLiveScore">0/20</b></div><label>Osservazioni<textarea id="practiceNotes" rows="4" placeholder="Osservazioni del docente/esaminatore"></textarea></label><br><button class="btn primary" id="savePractice">Salva valutazione</button><button class="btn ghost">Chiudi</button></form></dialog>
+<dialog id="resetPasswordDialog"><form method="dialog" class="card" style="min-width:min(560px,92vw)"><h2>Reimposta password</h2><p id="resetPasswordUser" class="status"></p><input id="resetPasswordUserId" type="hidden"><label>Nuova password<input id="adminNewPassword" type="password" minlength="8"></label><br><label>Conferma password<input id="adminNewPasswordConfirm" type="password" minlength="8"></label><br><button type="button" class="btn primary" id="saveAdminPassword">Reimposta</button><button class="btn ghost">Chiudi</button></form></dialog><dialog id="cfg"><form method="dialog" class="card" style="min-width:min(600px,94vw)"><h2>Supabase</h2><label>Project URL<input id="url"></label><label>Anon public key<textarea id="key" rows="5"></textarea></label><br><button class="btn primary" id="saveCfg">Salva</button><button class="btn ghost">Chiudi</button></form></dialog>
+<footer class="wrap"><div class="status" id="appFooter">K9 Academy — Piattaforma esami · Release 1.11</div></footer></main><script>
+let sb,user,profile,assignment,exam,tick,currentPractice=null,practiceValues={},professionalValues={},appSettings={};
+let examSettingsCache={},autoRefreshTimer=null,lastSessionCreatedId=null;const $=id=>document.getElementById(id);const questionValues=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100];
+const timerValues=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120];
+const passValues=[50,55,60,65,70,75,80,85,90,95,100];
+const labels={dogsitter:'Dogsitter',mantrailing:'Mantrailing',hrdd:'HRDD',detection:'Detection'};const practical={dogsitter:['Approccio e sicurezza','Gestione passeggiata','Lettura del cane','Benessere','Gestione imprevisti','Comunicazione cliente','Attrezzature','Gestione domestica','Rientro e controllo','Autonomia'],mantrailing:['Preparazione testimone','Briefing e valutazione area','Vestizione del cane','Gestione longhina','Lettura del cane','Gestione partenza','Sicurezza percorso','Motivazione','Conclusione e premio','Debriefing'],hrdd:['Preparazione area','Biosicurezza e DPI','Controllo contaminazione','Strategia di ricerca','Lettura del cane','Segnalazione finale','Gestione blank','Documentazione','Sicurezza operativa','Debriefing'],detection:['Preparazione target','Controllo contaminazione','Strategia di ricerca','Conduzione','Lettura del cane','Discriminazione','Segnalazione','Gestione rinforzo','Gestione blank','Debriefing']};const professionalCriteria=['Puntualità e organizzazione','Affidabilità e responsabilità','Comunicazione e rispetto','Autonomia e capacità decisionale'];
+function note(t,b=false){$('notice').textContent=t||'';$('notice').className=b?'status err':'status ok';$('notice').classList.toggle('hidden',!t)}
+function isUuid(value){return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value||''))}
+function setInvalid(el,invalid){if(el)el.classList.toggle('field-error',!!invalid)}
+function positiveInt(value,min,max){const n=Number(value);return Number.isInteger(n)&&n>=min&&n<=max?n:null}
+function setSelectState(select,button,hasItems,emptyText){if(!select)return;select.disabled=!hasItems;if(button)button.disabled=!hasItems;if(!hasItems)select.innerHTML=`<option value="">${emptyText}</option>`}function cfg(){return{url:localStorage.k9_url||'',key:localStorage.k9_key||''}}function init(){const c=cfg();if(!c.url||!c.key)return false;sb=supabase.createClient(c.url,c.key);return true}
+function normalizeSessionUsername(v){return v.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'')}
+async function sha256Hex(v){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+function showLoginMode(m){const s=m==='student';$('studentLoginBox').classList.toggle('hidden',!s);$('staffLoginBox').classList.toggle('hidden',s);$('studentLoginTab').className='btn '+(s?'primary':'ghost');$('staffLoginTab').className='btn '+(s?'ghost':'primary')}
+function nowStamp(){return new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
+function disciplineCode(d){return({dogsitter:'DS',mantrailing:'MT',hrdd:'HRDD',detection:'DET'}[d]||'K9')}
+function dateCode(){const d=new Date();return String(d.getFullYear()).slice(-2)+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')}
+function makePassword(len=10){const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';const a=new Uint32Array(len);crypto.getRandomValues(a);return [...a].map(n=>chars[n%chars.length]).join('')}
+function makeCandidateCode(){const a=new Uint32Array(1);crypto.getRandomValues(a);return `K9-${dateCode()}-${String(a[0]%10000).padStart(4,'0')}`}
+let examSyncLock=false,examSyncSaveTimers={};
+
+async function loadExamSettingsCache(){
+ if(!sb)return;
+ const{data,error}=await sb.from('exam_settings').select('discipline,question_count,duration_minutes,pass_percentage');
+ if(!error)examSettingsCache=Object.fromEntries((data||[]).map(x=>[x.discipline,{
+   discipline:x.discipline,
+   question_count:Number(x.question_count),
+   duration_minutes:Number(x.duration_minutes),
+   pass_percentage:Number(x.pass_percentage)
+ }]));
+}
+
+function configForDiscipline(d){
+ return examSettingsCache[d]||{discipline:d,question_count:40,duration_minutes:45,pass_percentage:60};
+}
+
+function setSelectValue(id,value){
+ const el=$(id);if(!el)return;
+ const wanted=String(value);
+ if([...el.options].some(o=>o.value===wanted))el.value=wanted;
+}
+
+function updateSettingsCard(d,key,value){
+ const card=document.querySelector(`#settings [data-disc="${d}"]`);
+ if(!card)return;
+ const cls={question_count:'.qc',duration_minutes:'.dm',pass_percentage:'.pp'}[key];
+ const el=cls?card.querySelector(cls):null;
+ if(el&&String(el.value)!==String(value))el.value=String(value);
+}
+
+function applySyncedExamConfig(d){
+ const x=configForDiscipline(d);
+ examSyncLock=true;
+ setSelectValue('assignDiscipline',d);
+ setSelectValue('sessionDiscipline',d);
+ setSelectValue('assignQuestions',x.question_count);
+ setSelectValue('sessionQuestions',x.question_count);
+ setSelectValue('assignDuration',x.duration_minutes);
+ setSelectValue('sessionDuration',x.duration_minutes);
+ setSelectValue('assignPass',x.pass_percentage);
+ setSelectValue('sessionPass',x.pass_percentage);
+ updateSettingsCard(d,'question_count',x.question_count);
+ updateSettingsCard(d,'duration_minutes',x.duration_minutes);
+ updateSettingsCard(d,'pass_percentage',x.pass_percentage);
+ examSyncLock=false;
+ generateSessionIdentity(true);
+}
+
+function applyExamDefaults(d,target='assign'){
+ const x=configForDiscipline(d);
+ examSyncLock=true;
+ if(target==='assign'){
+   setSelectValue('assignQuestions',x.question_count);
+   setSelectValue('assignDuration',x.duration_minutes);
+   setSelectValue('assignPass',x.pass_percentage);
+ }else{
+   setSelectValue('sessionQuestions',x.question_count);
+   setSelectValue('sessionDuration',x.duration_minutes);
+   setSelectValue('sessionPass',x.pass_percentage);
+ }
+ examSyncLock=false;
+}
+
+async function persistExamConfig(d){
+ if(profile?.role!=='super_admin'||!sb)return;
+ const x=configForDiscipline(d);
+ const{error}=await sb.from('exam_settings').update({
+   question_count:Number(x.question_count),
+   duration_minutes:Number(x.duration_minutes),
+   pass_percentage:Number(x.pass_percentage),
+   updated_by:user.id,
+   updated_at:new Date().toISOString()
+ }).eq('discipline',d);
+ if(error)note('Sincronizzazione impostazioni non riuscita: '+error.message,true);
+}
+
+function scheduleExamConfigSave(d){
+ if(profile?.role!=='super_admin')return;
+ clearTimeout(examSyncSaveTimers[d]);
+ examSyncSaveTimers[d]=setTimeout(()=>persistExamConfig(d),450);
+}
+
+function syncExamConfig(d,key,value,source=''){
+ if(examSyncLock||!d)return;
+ const numeric=Number(value);
+ if(!Number.isFinite(numeric))return;
+ const x=configForDiscipline(d);
+ x[key]=numeric;
+ examSettingsCache[d]=x;
+
+ examSyncLock=true;
+ if(key==='question_count'){
+   setSelectValue('assignQuestions',numeric);setSelectValue('sessionQuestions',numeric);
+ }else if(key==='duration_minutes'){
+   setSelectValue('assignDuration',numeric);setSelectValue('sessionDuration',numeric);
+ }else if(key==='pass_percentage'){
+   setSelectValue('assignPass',numeric);setSelectValue('sessionPass',numeric);
+ }
+ updateSettingsCard(d,key,numeric);
+ examSyncLock=false;
+
+ scheduleExamConfigSave(d);
+}
+
+function syncDiscipline(d,source=''){
+ if(examSyncLock||!d)return;
+ applySyncedExamConfig(d);
+}
+function generateSessionIdentity(force=false){const d=$('sessionDiscipline')?.value;if(!d)return;const title=$('sessionTitle'),usern=$('commonUsername');const today=new Date().toLocaleDateString('it-IT');if(force||!title.value||title.dataset.auto==='1'){title.value=`${labels[d]} — ${today}`;title.dataset.auto='1';title.classList.add('auto-generated')}if(force||!usern.value||usern.dataset.auto==='1'){usern.value=`${disciplineCode(d)}-${dateCode()}`;usern.dataset.auto='1';usern.classList.add('auto-generated')}}
+function prepareCandidateCredentials(force=false){const code=$('candidateCode'),pass=$('newCandidatePassword');if(force||!code.value){code.value=makeCandidateCode();code.classList.add('auto-generated')}if(force||!pass.value){pass.value=makePassword();pass.classList.add('auto-generated')}}
+
+
+function firstUsableOption(select){
+ return [...select.options].find(o=>!o.disabled&&o.value!=='')||[...select.options].find(o=>!o.disabled)||null;
+}
+function ensureControlPrefilled(control){
+ if(control.disabled||control.readOnly)return;
+
+ if(control.tagName==='SELECT'){
+   const current=control.options[control.selectedIndex];
+   if(!current||current.disabled||current.value===''){
+     const first=firstUsableOption(control);
+     if(first){
+       control.value=first.value;
+       control.dispatchEvent(new Event('change',{bubbles:true}));
+     }
+   }
+   return;
+ }
+
+ if(control.tagName!=='INPUT'&&control.tagName!=='TEXTAREA')return;
+ const id=control.id||'';
+
+ // Valori standard modificabili.
+ const defaults={
+   assignQuestions:'40',assignDuration:'45',assignPass:'60',
+   sessionQuestions:'40',sessionDuration:'45',sessionPass:'60',
+   settingsQuestionCount:'40',settingsDuration:'45',settingsPass:'60'
+ };
+ if((control.value??'').trim()===''&&defaults[id]!==undefined){
+   control.value=defaults[id];
+   control.dispatchEvent(new Event('input',{bubbles:true}));
+   control.dispatchEvent(new Event('change',{bubbles:true}));
+ }
+}
+
+
+
+function markSyncedControls(){
+ ['assignQuestions','assignDuration','assignPass','sessionQuestions','sessionDuration','sessionPass'].forEach(id=>{
+   $(id)?.closest('label')?.classList.add('sync-linked');
+ });
+ document.querySelectorAll('#settings [data-disc] label').forEach(label=>{
+   if(label.querySelector('.qc,.dm,.pp'))label.classList.add('sync-linked');
+ });
+}
+function makeControlsReady(){
+ markSyncedControls();
+ document.querySelectorAll('input,select,textarea').forEach(control=>{
+   ensureControlPrefilled(control);
+   if(control.dataset.readyControl==='1')return;
+   control.dataset.readyControl='1';
+
+   // Toccando un input numerico/testuale, seleziona tutto il valore già presente:
+   // basta digitare per sostituirlo.
+   if(control.tagName==='INPUT'&&!['checkbox','radio','color','file','date','time'].includes(control.type)){
+     control.addEventListener('focus',()=>{
+       if(control.value)requestAnimationFrame(()=>{try{control.select()}catch{}});
+     });
+     control.addEventListener('click',()=>{
+       if(control.value)requestAnimationFrame(()=>{try{control.select()}catch{}});
+     });
+   }
+
+   // Ogni select mantiene sempre una scelta valida quando esistono opzioni disponibili.
+   if(control.tagName==='SELECT'){
+     control.addEventListener('focus',()=>ensureControlPrefilled(control));
+     control.addEventListener('change',()=>ensureControlPrefilled(control));
+   }
+ });
+}
+
+
+function enableClickableSelectableUI(){
+ makeControlsReady();
+ document.querySelectorAll('.stat-card,.preview-box,#bankStats>.card,#settings>.card').forEach(card=>{card.classList.add('click-select');if(card.dataset.selectReady==='1')return;card.dataset.selectReady='1';card.tabIndex=0;const select=()=>{card.parentElement?.querySelectorAll('.selected-card').forEach(x=>x.classList.remove('selected-card'));card.classList.add('selected-card')};card.addEventListener('click',e=>{if(!e.target.closest('button,input,select,textarea,a'))select()});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select()}})});
+ document.querySelectorAll('label').forEach(label=>{if(label.dataset.clickReady==='1')return;label.dataset.clickReady='1';label.addEventListener('click',e=>{if(e.target.matches('input,select,textarea,button'))return;const control=label.querySelector('input,select,textarea');if(control&&!control.disabled)control.focus()})});
+}
+function pageSlug(value){
+ return String(value||'pagina').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+let currentPageId='';
+function buildSidePages(){
+ const staff=$('staffPanel'),admin=$('adminPanel');
+ if(!staff||staff.dataset.pages==='1')return;
+
+ const workspace=document.createElement('div');workspace.id='topWorkspace';workspace.className='top-workspace hidden';
+ const navWrap=document.createElement('div');navWrap.className='top-page-nav-wrap';
+ const nav=document.createElement('nav');nav.id='topPageNav';nav.className='top-page-nav';navWrap.appendChild(nav);
+ const content=document.createElement('div');content.id='topWorkspaceContent';content.className='top-workspace-content';
+
+ staff.parentNode.insertBefore(workspace,staff);
+ workspace.appendChild(navWrap);workspace.appendChild(content);
+ content.appendChild(staff);content.appendChild(admin);
+
+ const makePages=(panel,groupLabel)=>{
+   [...panel.children].filter(el=>el.classList?.contains('card')).forEach((card,index)=>{
+     let h=card.querySelector(':scope > h2');
+     let title=h?.textContent?.trim();
+     if(!title&&panel.id==='staffPanel'&&index===0)title='Dashboard';
+     if(!title)title='Sezione';
+     if(h)h.remove();
+     const id='page-'+pageSlug(groupLabel+'-'+title);
+     card.id=card.id||id;card.dataset.pageId=id;card.dataset.pageTitle=title;card.dataset.pageGroup=groupLabel;card.classList.add('app-page');
+     const heading=document.createElement('div');heading.className='page-heading';
+     heading.innerHTML=`<h2>${title}</h2><span class="page-role-badge role-page-badge">${groupLabel}</span>`;
+     card.insertBefore(heading,card.firstChild);
+   });
+ };
+ makePages(staff,'Operativo');makePages(admin,'Amministrazione');
+ staff.dataset.pages='1';admin.dataset.pages='1';
+ enableClickableSelectableUI();refreshSideNavigation();
+}
+function visibleAppPages(){
+ return [...document.querySelectorAll('.app-page')].filter(page=>{
+   if(page.classList.contains('super-only')&&profile?.role!=='super_admin')return false;
+   if(page.classList.contains('manager-card')&&!['vice_admin','super_admin'].includes(profile?.role))return false;
+   if(page.id==='assignExamCard'&&(profile?.role==='examiner'||(profile?.role==='teacher'&&!bool(appSettings.teacher_can_assign))))return false;
+   return true;
+ });
+}
+function refreshSideNavigation(){
+ const workspace=$('topWorkspace'),nav=$('topPageNav');
+ if(!workspace||!nav||!profile)return;
+ workspace.classList.remove('hidden');
+ const pages=visibleAppPages();
+ nav.innerHTML=pages.map(p=>`<button type="button" class="top-page-btn" data-target="${p.dataset.pageId}">${p.dataset.pageTitle}</button>`).join('');
+ nav.querySelectorAll('.top-page-btn').forEach(btn=>btn.onclick=()=>showAppPage(btn.dataset.target));
+ if(!pages.length)return;
+ const stillValid=pages.some(p=>p.dataset.pageId===currentPageId);
+ showAppPage(stillValid?currentPageId:pages[0].dataset.pageId,false);
+}
+function showAppPage(pageId,scrollTop=true){
+ const pages=[...document.querySelectorAll('.app-page')];
+ const target=pages.find(p=>p.dataset.pageId===pageId);if(!target)return;
+ pages.forEach(p=>p.classList.toggle('active-page',p===target));
+ currentPageId=pageId;
+ document.querySelectorAll('.top-page-btn').forEach(b=>b.classList.toggle('active',b.dataset.target===pageId));
+ if(scrollTop)window.scrollTo({top:$('topWorkspace')?.offsetTop||0,behavior:'smooth'});
+ enableClickableSelectableUI();
+}
+function navigateRelative(delta){
+ const ids=[...document.querySelectorAll('.top-page-btn')].map(b=>b.dataset.target);
+ const i=ids.indexOf(currentPageId);if(i<0||!ids.length)return;
+ const next=Math.max(0,Math.min(ids.length-1,i+delta));if(next!==i)showAppPage(ids[next]);
+}
+async function refreshAll(auto=false){if(!user||!profile||!sb)return;try{if(profile.role==='student'){await loadAssignment()}else{const jobs=[loadDashboard(),loadExams()];if(profile.role!=='examiner')jobs.push(loadStudents());if(profile.role==='super_admin')jobs.push(loadSessions(),loadUsers(),loadSettings(),loadExaminers());await Promise.all(jobs)}if($('lastAutoRefresh'))$('lastAutoRefresh').textContent=`Ultimo aggiornamento: ${nowStamp()}`;if(!auto)note('Dati aggiornati.')}catch(e){if(!auto)note(e.message||'Errore aggiornamento.',true)}}
+function startAutoRefresh(){clearInterval(autoRefreshTimer);if(!user)return;autoRefreshTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshAll(true)},30000);$('automationBar')?.classList.toggle('hidden',profile?.role==='student')}
+function setupAutomationEvents(){
+ $('assignDiscipline')?.addEventListener('change',e=>syncDiscipline(e.target.value,'assign'));
+ $('sessionDiscipline')?.addEventListener('change',e=>syncDiscipline(e.target.value,'session'));
+
+ $('assignQuestions')?.addEventListener('change',e=>syncExamConfig($('assignDiscipline').value,'question_count',e.target.value,'assign'));
+ $('sessionQuestions')?.addEventListener('change',e=>syncExamConfig($('sessionDiscipline').value,'question_count',e.target.value,'session'));
+ $('assignDuration')?.addEventListener('change',e=>syncExamConfig($('assignDiscipline').value,'duration_minutes',e.target.value,'assign'));
+ $('sessionDuration')?.addEventListener('change',e=>syncExamConfig($('sessionDiscipline').value,'duration_minutes',e.target.value,'session'));
+ $('assignPass')?.addEventListener('change',e=>syncExamConfig($('assignDiscipline').value,'pass_percentage',e.target.value,'assign'));
+ $('sessionPass')?.addEventListener('change',e=>syncExamConfig($('sessionDiscipline').value,'pass_percentage',e.target.value,'session'));
+
+ // Impostazioni per disciplina: una modifica qui aggiorna subito Assegna esame e Sessioni.
+ $('settings')?.addEventListener('change',e=>{
+   const field=e.target.closest('.qc,.dm,.pp');
+   if(!field)return;
+   const card=field.closest('[data-disc]');if(!card)return;
+   const d=card.dataset.disc;
+   const key=field.classList.contains('qc')?'question_count':field.classList.contains('dm')?'duration_minutes':'pass_percentage';
+   syncExamConfig(d,key,field.value,'settings');
+   if($('assignDiscipline')?.value===d||$('sessionDiscipline')?.value===d)applySyncedExamConfig(d);
+ });
+
+ $('sessionTitle')?.addEventListener('input',e=>{e.target.dataset.auto='0';e.target.classList.remove('auto-generated')});
+ $('commonUsername')?.addEventListener('input',e=>{e.target.dataset.auto='0';e.target.classList.remove('auto-generated')});
+ $('candidateSession')?.addEventListener('change',()=>prepareCandidateCredentials(false));
+ $('candidateName')?.addEventListener('focus',()=>prepareCandidateCredentials(false));
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&user)refreshAll(true)});
+ window.addEventListener('focus',()=>{if(user)refreshAll(true)});
+}
+
+
+
+$('studentLoginTab').onclick=()=>showLoginMode('student');$('staffLoginTab').onclick=()=>showLoginMode('staff');
+$('candidateLoginBtn').onclick=async()=>{
+  if(!sb&&!init())return note('Configura Supabase',true);
+  const username=$('sessionUsername').value.trim();
+  const password=$('candidatePassword').value;
+  if(!username||!password)return note('Inserisci username e password.',true);
+  try{
+    $('candidateLoginBtn').disabled=true;
+    const{data,error}=await sb.functions.invoke('manage-exam-access',{
+      body:{action:'candidate_login',common_username:username,password}
+    });
+    if(error||data?.error)throw new Error('Credenziali non valide o sessione non attiva.');
+    const{error:loginError}=await sb.auth.signInWithPassword({
+      email:data.login_email,
+      password
+    });
+    if(loginError)throw loginError;
+    await boot();
+  }catch(e){
+    note('Credenziali non valide o sessione non disponibile.',true);
+  }finally{
+    $('candidateLoginBtn').disabled=false;
+  }
+};
+$('configBtn').onclick=()=>{$('url').value=cfg().url;$('key').value=cfg().key;$('cfg').showModal()};$('saveCfg').onclick=async e=>{e.preventDefault();const url=$('url').value.trim(),key=$('key').value.trim();if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)||key.length<20)return note('Project URL o chiave pubblica non validi.',true);localStorage.k9_url=url;localStorage.k9_key=key;sb=null;init();$('cfg').close();note('Supabase collegato correttamente.');await boot()};$('loginBtn').onclick=async()=>{if(!sb&&!init())return note('Configura Supabase',true);const{error}=await sb.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error)return note(error.message,true);boot()};$('logoutBtn').onclick=async()=>{await sb.auth.signOut();location.reload()};
+
+const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 1.11',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true};
+function bool(v){return v===true||v==='true'}
+function applyAppSettings(s={}){appSettings={...defaultAppSettings,...s};const r=document.documentElement;r.style.setProperty('--p',appSettings.primary_color);r.style.setProperty('--bg',appSettings.background_color);r.style.setProperty('--card',appSettings.card_color);document.querySelector('header').style.background=`linear-gradient(135deg,${appSettings.header_color},${appSettings.primary_color})`;document.querySelector('.wrap').style.maxWidth=appSettings.max_width+'px';document.body.classList.toggle('compact',appSettings.density==='compact');document.body.classList.toggle('square-ui',appSettings.corners==='square');const dark=appSettings.theme==='dark'||(appSettings.theme==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark-ui',dark);$('appTitle').textContent=appSettings.app_name;$('appSubtitle').textContent=appSettings.app_subtitle;$('appFooter').textContent=appSettings.footer_text;const logo=$('appLogo');if(appSettings.logo_url){logo.src=appSettings.logo_url;logo.style.display='block'}else logo.style.display='none';const help=document.querySelector('#studentLoginBox .status');if(help)help.textContent=appSettings.student_help_text;if(profile)$('assignExamCard').classList.toggle('hidden',profile.role==='examiner'||(profile.role==='teacher'&&!bool(appSettings.teacher_can_assign)))}
+async function loadPublicAppSettings(){if(!sb)return;const{data,error}=await sb.from('app_settings').select('settings').eq('id',1).maybeSingle();if(!error&&data?.settings)applyAppSettings(data.settings);else applyAppSettings(defaultAppSettings)}
+function fillAppSettingsForm(){const s=appSettings;const map={cfgAppName:'app_name',cfgAppSubtitle:'app_subtitle',cfgLogoUrl:'logo_url',cfgStudentHelp:'student_help_text',cfgFooterText:'footer_text',cfgOrganization:'organization_name',cfgPrimary:'primary_color',cfgHeader:'header_color',cfgBackground:'background_color',cfgCard:'card_color',cfgTheme:'theme',cfgDensity:'density',cfgCorners:'corners',cfgMaxWidth:'max_width',cfgShowResult:'show_result',cfgImmediateFeedback:'immediate_feedback',cfgShowExplanation:'show_explanation',cfgConfirmSubmit:'confirm_submit',cfgTimerWarning:'timer_warning_minutes',cfgTeacherAssign:'teacher_can_assign'};for(const[id,key]of Object.entries(map)){const el=$(id);if(el)el.value=typeof s[key]==='boolean'?String(s[key]):s[key]??''}updateSettingsPreview()}
+function readAppSettingsForm(){return{app_name:$('cfgAppName').value.trim(),app_subtitle:$('cfgAppSubtitle').value.trim(),logo_url:$('cfgLogoUrl').value.trim(),student_help_text:$('cfgStudentHelp').value.trim(),footer_text:$('cfgFooterText').value.trim(),organization_name:$('cfgOrganization').value.trim(),primary_color:$('cfgPrimary').value,header_color:$('cfgHeader').value,background_color:$('cfgBackground').value,card_color:$('cfgCard').value,theme:$('cfgTheme').value,density:$('cfgDensity').value,corners:$('cfgCorners').value,max_width:+$('cfgMaxWidth').value,show_result:bool($('cfgShowResult').value),immediate_feedback:bool($('cfgImmediateFeedback').value),show_explanation:bool($('cfgShowExplanation').value),confirm_submit:bool($('cfgConfirmSubmit').value),timer_warning_minutes:+$('cfgTimerWarning').value,teacher_can_assign:bool($('cfgTeacherAssign').value)}}
+function updateSettingsPreview(){if(!$('previewTitle'))return;$('previewTitle').textContent=$('cfgAppName').value||'K9 Academy';$('previewSubtitle').textContent=$('cfgAppSubtitle').value;const l=$('logoPreview');if($('cfgLogoUrl').value){l.src=$('cfgLogoUrl').value;l.style.display='block'}else l.style.display='none'}
+function applyRoleVisual(role){
+ document.body.classList.remove('role-super_admin','role-vice_admin','role-teacher','role-examiner','role-student');
+ if(role)document.body.classList.add('role-'+role);
+ const names={
+  super_admin:['Super Amministratore','Controllo completo'],
+  vice_admin:['Vice Amministratore','Gestione operativa'],
+  teacher:['Docente','Didattica ed esami assegnati'],
+  examiner:['Esaminatore','Valutazioni pratiche assegnate'],
+  student:['Corsista','Area personale d’esame']
+ };
+ let box=$('roleVisualIdentity');
+ if(!box){box=document.createElement('div');box.id='roleVisualIdentity';box.className='role-identity';$('role')?.insertAdjacentElement('afterend',box)}
+ const d=names[role];box.innerHTML=d?`<span class="role-identity-dot"></span><span>${d[0]} · ${d[1]}</span>`:'';
+}
+async function boot(){
+ if(!sb&&!init()){ $('configBtn').textContent='Configura Supabase'; return note('Inserisci Project URL e chiave pubblica.'); }
+ $('configBtn').textContent='Supabase collegato';$('configBtn').classList.add('config-ok');
+ await loadPublicAppSettings();
+ const{data:{user:u},error:authError}=await sb.auth.getUser();
+ if(authError)return note(authError.message,true);
+ user=u;['studentPanel','staffPanel','adminPanel'].forEach(x=>$(x).classList.add('hidden'));
+ if(!u){applyRoleVisual('');$('authCard').classList.remove('hidden');$('logoutBtn').classList.add('hidden');$('who').textContent='Non autenticato';$('role').textContent='';note('');return}
+ $('authCard').classList.add('hidden');$('logoutBtn').classList.remove('hidden');
+ const{data,error}=await sb.from('profiles').select('*').eq('id',u.id).single();
+ if(error)return note(error.message,true);
+ profile=data;applyRoleVisual(data.role);$('who').textContent=data.full_name||data.email;$('role').textContent='— '+({student:'Corsista',teacher:'Docente',examiner:'Esaminatore',vice_admin:'Vice Amministratore',super_admin:'Super Amministratore'}[data.role]||data.role);note('');
+ await loadExamSettingsCache();
+ if(data.role==='student'){$('studentPanel').classList.remove('hidden');await loadAssignment()}
+ else{
+ $('staffPanel').classList.remove('hidden');
+ const isExaminer=data.role==='examiner';
+ const isManager=['vice_admin','super_admin'].includes(data.role);
+ $('assignExamCard').classList.toggle('hidden',isExaminer);
+ if(!isExaminer)await loadStudents();
+ await Promise.all([loadExams(),loadDashboard()]);
+ if(isManager){
+   $('adminPanel').classList.remove('hidden');
+   await Promise.all([loadSessions(),loadExaminers()]);
+   document.querySelectorAll('#adminPanel .super-only').forEach(el=>el.classList.toggle('hidden',data.role!=='super_admin'));
+   const superOption=$('#newStaffRole')?.querySelector('[data-super-option="1"]');
+   if(superOption)superOption.hidden=data.role!=='super_admin';
+   if(data.role!=='super_admin'&&$('#newStaffRole')?.value==='super_admin')$('#newStaffRole').value='teacher';
+   if(data.role==='super_admin'){await Promise.all([loadSettings(),loadUsers()]);fillAppSettingsForm();}
+   generateSessionIdentity(false);prepareCandidateCredentials(false);prepareStaffPassword(false);
+ }
+}
+ buildSidePages();applyExamDefaults($('assignDiscipline')?.value,'assign');startAutoRefresh();
+}
+async function loadAssignment(){const{data,error}=await sb.rpc('get_my_assigned_exam');if(error)return note(error.message,true);assignment=data;if(!data){$('assignmentInfo').innerHTML='<b>Nessun esame assegnato.</b><p>Il Corsista non può scegliere o creare una prova.</p>';return}if(['submitted','expired'].includes(data.status)){return} $('assignmentInfo').innerHTML=`<p><span class="badge">${labels[data.discipline]}</span></p><p><b>${data.question_count} domande</b> · ${data.duration_minutes} minuti · soglia ${data.pass_percentage}%</p>${data.notes?`<p>${data.notes}</p>`:''}`;$('startBtn').classList.remove('hidden')}
+$('startBtn').onclick=async()=>{const{data,error}=await sb.rpc('start_assigned_exam',{p_assignment_id:assignment.id});if(error)return note(error.message,true);exam=data;$('assignmentCard').classList.add('hidden');$('examHeader').classList.remove('hidden');$('examTitle').textContent='Esame '+labels[exam.discipline];$('examMeta').textContent=exam.question_count+' domande';renderExam();runTimer()};
+function renderExam(){$('questions').innerHTML=(exam.questions||[]).map(q=>`<article class="q" data-pos="${q.position}"><div class="meta">${q.category} · ${q.difficulty}</div><h3>${q.position}. ${q.question_text}</h3><div class="options">${q.options.map((o,i)=>`<button class="opt ${q.selected_option===i?(q.is_correct?'correct':'wrong'):''} ${q.selected_option!==null&&q.correct_option===i?'correct':''}" data-i="${i}" ${q.selected_option!==null?'disabled':''}>${String.fromCharCode(65+i)}. ${o}</button>`).join('')}</div>${q.selected_option!==null&&bool(appSettings.immediate_feedback)?`<div class="feedback ${q.is_correct?'ok':'err'}">${q.is_correct?'Risposta corretta':'Risposta sbagliata'}</div>${bool(appSettings.show_explanation)?`<div class="meta">${q.explanation||''}</div>`:''}`:''}</article>`).join('');$('questions').querySelectorAll('.opt:not(:disabled)').forEach(b=>b.onclick=answer);const n=exam.questions.filter(q=>q.selected_option!==null).length;$('answered').textContent=n;$('progress').style.width=(n/exam.question_count*100)+'%'}
+async function answer(e){const card=e.target.closest('.q'),pos=+card.dataset.pos,sel=+e.target.dataset.i;card.querySelectorAll('button').forEach(x=>x.disabled=true);const{data,error}=await sb.rpc('answer_exam_question',{p_assignment_id:exam.assignment_id,p_position:pos,p_selected_option:sel});if(error)return note(error.message,true);const q=exam.questions.find(x=>x.position===pos);Object.assign(q,{selected_option:sel,is_correct:data.is_correct,correct_option:data.correct_option,explanation:data.explanation});renderExam()}
+function runTimer(){clearInterval(tick);const f=()=>{const s=Math.max(0,Math.floor((new Date(exam.ends_at)-Date.now())/1000));$('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');$('timer').classList.toggle('danger',s<(Number(appSettings.timer_warning_minutes||5)*60));if(!s){clearInterval(tick);finalize(true)}};f();tick=setInterval(f,1000)}$('submitBtn').onclick=()=>{if(bool(appSettings.confirm_submit)&&!confirm('Confermi la consegna definitiva della prova?'))return;finalize(false)};async function finalize(expired){const{data,error}=await sb.rpc('finalize_exam',{p_assignment_id:exam.assignment_id,p_expired:expired});if(error)return note(error.message,true);clearInterval(tick);$('examHeader').classList.add('hidden');$('questions').innerHTML='';if(bool(appSettings.show_result)){$('resultCard').classList.remove('hidden');$('result').innerHTML=`<p>${data.correct_answers}/${data.question_count} corrette</p><p><b>${data.score_percentage}% — ${data.passed?'IDONEO':'NON IDONEO'}</b></p>${data.status==='expired'?'<p>Tempo scaduto: consegna automatica.</p>':''}`}else{$('resultCard').classList.remove('hidden');$('result').innerHTML='<p>Prova consegnata correttamente. Il risultato sarà comunicato dal Docente.</p>'}}
+async function loadStudents(){
+ const select=$('studentSelect'),button=$('assignBtn');
+ select.innerHTML='<option value="">Caricamento Corsisti…</option>';select.disabled=true;button.disabled=true;
+ const{data,error}=await sb.from('profiles').select('id,email,full_name').eq('role','student').order('full_name',{ascending:true});
+ if(error){setSelectState(select,button,false,'Errore nel caricamento');return note('Impossibile caricare i Corsisti: '+error.message,true)}
+ const students=(data||[]).filter(x=>isUuid(x.id));
+ if(!students.length){setSelectState(select,button,false,'Nessun Corsista disponibile');return}
+ select.innerHTML='<option value="">Seleziona un Corsista</option>'+students.map(x=>`<option value="${x.id}">${x.full_name||x.email}</option>`).join('');
+ select.disabled=false;button.disabled=false;
+}
+$('studentSelect').onchange=()=>setInvalid($('studentSelect'),!isUuid($('studentSelect').value));
+$('assignBtn').onclick=async()=>{
+ const studentId=$('studentSelect').value,questions=positiveInt($('assignQuestions').value,1,200),duration=positiveInt($('assignDuration').value,1,300),pass=positiveInt($('assignPass').value,1,100);
+ setInvalid($('studentSelect'),!isUuid(studentId));setInvalid($('assignQuestions'),!questions);setInvalid($('assignDuration'),!duration);setInvalid($('assignPass'),!pass);
+ if(!isUuid(studentId))return note('Seleziona un Corsista valido prima di assegnare l’esame.',true);
+ if(!questions||!duration||!pass)return note('Controlla numero di domande, timer e soglia di superamento.',true);
+ $('assignBtn').disabled=true;
+ const{error}=await sb.rpc('assign_exam',{p_student_id:studentId,p_discipline:$('assignDiscipline').value,p_question_count:questions,p_duration_minutes:duration,p_pass_percentage:pass,p_notes:$('assignNotes').value.trim()||null});
+ $('assignBtn').disabled=false;note(error?error.message:'Esame assegnato correttamente.',!!error);if(!error){await Promise.all([loadExams(),loadDashboard()])}
+};
+async function loadDashboard(){
+ if(!sb||!profile||profile.role==='student')return;
+ const queries=[
+  sb.from('profiles').select('id',{count:'exact',head:true}).eq('role','student'),
+  sb.from('exam_overview').select('id',{count:'exact',head:true}).in('status',['assigned','in_progress']),
+  sb.from('exam_overview').select('id',{count:'exact',head:true}).in('status',['submitted','expired']),
+  sb.from('exam_session_overview').select('id',{count:'exact',head:true}).eq('active',true)
+ ];
+ const results=await Promise.all(queries);
+ const ids=['dashStudents','dashOpenExams','dashCompletedExams','dashActiveSessions'];
+ results.forEach((r,i)=>{$(ids[i]).textContent=r.error?'—':String(r.count??0)});
+}
+
+let examinerOptions=[];
+async function loadExaminers(){
+ const{data,error}=await sb.from('profiles').select('id,full_name,email,role').in('role',['examiner','teacher']).order('full_name');
+ if(error)return note(error.message,true);examinerOptions=data||[];
+}
+async function setEvaluator(assignmentId,evaluatorId){
+ const{error}=await sb.rpc('set_exam_evaluator',{p_assignment_id:assignmentId,p_evaluator_id:evaluatorId||null});
+ note(error?error.message:'Esaminatore assegnato.',!!error);if(!error)loadExams();
+}
+async function loadExams(){
+ if(['super_admin','vice_admin'].includes(profile?.role)&&!examinerOptions.length)await loadExaminers();
+ const{data,error}=await sb.from('exam_overview').select('*').order('assigned_at',{ascending:false});
+ if(error)return note(error.message,true);
+ $('examRows').innerHTML=(data||[]).length?(data||[]).map(x=>{
+   const theoryDone=['submitted','expired'].includes(x.status);
+   const practiceDone=x.practical_score!==null&&x.practical_completed_at;
+   const actionLabel=practiceDone?'Modifica '+x.practical_score+'/50':theoryDone?'Compila':'Attendi teoria';
+   const disabled=!theoryDone?'disabled':'';
+   const disabledClass=!theoryDone?'practice-disabled':'';
+   const criteria=encodeURIComponent(JSON.stringify(x.practical_criteria||[]));
+   const professional=encodeURIComponent(JSON.stringify(x.professional_criteria||[]));
+   const notes=encodeURIComponent(x.practical_notes||'');
+   return `<tr><td>${x.student_name||x.student_email}</td><td>${labels[x.discipline]}</td><td>${x.status}</td><td>${x.correct_answers}/${x.question_count} ${x.submitted_at?'— '+x.score_percentage+'%':''}</td><td>${['super_admin','vice_admin'].includes(profile.role)?`<select onchange="setEvaluator('${x.id}',this.value)"><option value="">Non assegnato</option>${examinerOptions.map(e=>`<option value="${e.id}" ${x.evaluator_id===e.id?'selected':''}>${e.full_name||e.email} — ${e.role==='examiner'?'Esaminatore':'Docente'}</option>`).join('')}</select>`:(x.evaluator_name||x.evaluator_email||'Non assegnato')}</td><td><button class="btn ghost ${disabledClass}" ${disabled} onclick="openPractice('${x.id}','${x.discipline}','${criteria}','${professional}','${notes}')">${actionLabel}</button>${practiceDone?`<div class="meta">Prof. ${x.professional_score}/20</div>`:''}</td><td>${new Date(x.assigned_at).toLocaleString('it-IT')}</td></tr>`;
+ }).join(''):'<tr><td colspan="7"><div class="empty-state">Nessun esame presente.</div></td></tr>';
+}
+$('refreshExams').onclick=()=>refreshAll(false);
+
+function renderRatingGroup(containerId,labelsList,valuesStore,prefix){
+ const box=$(containerId);
+ box.innerHTML=labelsList.map((label,i)=>`<div class="criterion"><b>${i+1}. ${label}</b><div class="rating">${[1,2,3,4,5].map(v=>`<button type="button" class="btn ghost ${valuesStore[i]===v?'selected':''}" data-prefix="${prefix}" data-i="${i}" data-v="${v}">${v}</button>`).join('')}</div></div>`).join('');
+ box.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+   const store=b.dataset.prefix==='practice'?practiceValues:professionalValues;
+   store[+b.dataset.i]=+b.dataset.v;
+   b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('selected',x===b));
+   updatePracticeTotals();
+ });
+}
+function updatePracticeTotals(){
+ const ps=Object.values(practiceValues).reduce((a,v)=>a+(Number(v)||0),0);
+ const prof=Object.values(professionalValues).reduce((a,v)=>a+(Number(v)||0),0);
+ $('practiceLiveScore').textContent=ps+'/50';
+ $('professionalLiveScore').textContent=prof+'/20';
+}
+window.openPractice=(id,disc,criteriaEncoded,professionalEncoded,notesEncoded)=>{
+ currentPractice={id,disc};
+ const savedCriteria=JSON.parse(decodeURIComponent(criteriaEncoded||'%5B%5D'));
+ const savedProfessional=JSON.parse(decodeURIComponent(professionalEncoded||'%5B%5D'));
+ practiceValues={};professionalValues={};
+ savedCriteria.forEach((x,i)=>{if(Number(x.score)>=1&&Number(x.score)<=5)practiceValues[i]=Number(x.score)});
+ savedProfessional.forEach((x,i)=>{if(Number(x.score)>=1&&Number(x.score)<=5)professionalValues[i]=Number(x.score)});
+ $('practiceTitle').textContent='Valutazione pratica — '+labels[disc];
+ $('practiceNotes').value=decodeURIComponent(notesEncoded||'');
+ renderRatingGroup('practiceCriteria',practical[disc],practiceValues,'practice');
+ renderRatingGroup('professionalCriteria',professionalCriteria,professionalValues,'professional');
+ updatePracticeTotals();
+ $('practiceDialog').showModal();
+};
+$('savePractice').onclick=async e=>{
+ e.preventDefault();
+ if(!currentPractice)return;
+ const missingPractice=practical[currentPractice.disc].some((_,i)=>!practiceValues[i]);
+ const missingProfessional=professionalCriteria.some((_,i)=>!professionalValues[i]);
+ if(missingPractice||missingProfessional){
+   note('Completa tutte le voci della valutazione pratica e della professionalità.',true);
+   return;
+ }
+ const criteria=practical[currentPractice.disc].map((label,i)=>({label,score:practiceValues[i]}));
+ const professional_criteria=professionalCriteria.map((label,i)=>({label,score:professionalValues[i]}));
+ const practical_score=criteria.reduce((a,x)=>a+x.score,0);
+ const professional_score=professional_criteria.reduce((a,x)=>a+x.score,0);
+ const payload={
+   assignment_id:currentPractice.id,
+   evaluator_id:user.id,
+   discipline:currentPractice.disc,
+   criteria,
+   professional_criteria,
+   practical_score,
+   professional_score,
+   notes:$('practiceNotes').value.trim(),
+   completed_at:new Date().toISOString()
+ };
+ const{error}=await sb.from('practical_evaluations').upsert(payload,{onConflict:'assignment_id'});
+ note(error?error.message:'Valutazione pratica salvata.',!!error);
+ if(!error){$('practiceDialog').close();await refreshAll(true);}
+};
+async function loadSettings(){
+const [{data},{data:stats,error:statsError}]=await Promise.all([
+ sb.from('exam_settings').select('*').order('discipline'),
+ sb.from('question_bank_stats').select('*').order('discipline')
+]);
+if(statsError)return note(statsError.message,true);examSettingsCache=Object.fromEntries((data||[]).map(x=>[x.discipline,x]));
+const statMap=Object.fromEntries((stats||[]).map(x=>[x.discipline,x]));
+$('bankStats').innerHTML=['dogsitter','mantrailing','hrdd','detection'].map(d=>{
+ const s=statMap[d]||{total_questions:0,active_questions:0,categories:0};
+ return `<div class="card"><h3>${labels[d]}</h3><p><b>${s.active_questions}</b> domande attive</p><p>${s.categories} categorie</p></div>`;
+}).join('');
+$('settings').innerHTML=(data||[]).map(x=>`<div class="card" data-disc="${x.discipline}"><h3>${labels[x.discipline]}</h3><div class="grid"><label>Domande<select class="qc">${questionValues.map(v=>`<option value="${v}" ${v===Number(x.question_count)?'selected':''}>${v}</option>`).join('')}</select></label><label>Minuti<select class="dm">${timerValues.map(v=>`<option value="${v}" ${v===Number(x.duration_minutes)?'selected':''}>${v}</option>`).join('')}</select></label><label>Soglia %<select class="pp">${passValues.map(v=>`<option value="${v}" ${v===Number(x.pass_percentage)?'selected':''}>${v}%</option>`).join('')}</select></label><label>Banca domande<input value="${statMap[x.discipline]?.active_questions||0}" readonly></label></div></div>`).join('');
+if($('assignDiscipline')?.value)applySyncedExamConfig($('assignDiscipline').value)}async function loadUsers(){
+ if(profile?.role!=='super_admin')return;
+ const{data,error}=await sb.from('profiles').select('*').order('email');
+ if(error)return note(error.message,true);
+ const names={student:'Corsista',teacher:'Docente',examiner:'Esaminatore',vice_admin:'Vice Amministratore',super_admin:'Super Amministratore'};
+ $('userRows').innerHTML=(data||[]).map(x=>`<tr><td>${x.full_name||'-'}</td><td>${x.role==='student'?'Account Corsista':x.email}</td><td><select class="role-select" data-id="${x.id}">${Object.keys(names).map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${names[r]}</option>`).join('')}</select></td><td><button type="button" class="btn ghost reset-user-password" data-id="${x.id}" data-name="${x.full_name||x.email||'Utente'}">Cambia password</button></td></tr>`).join('');
+ $('userRows').querySelectorAll('.role-select').forEach(s=>s.onchange=async()=>{const{error}=await sb.from('profiles').update({role:s.value,updated_at:new Date().toISOString()}).eq('id',s.dataset.id);note(error?error.message:'Ruolo aggiornato.',!!error);if(!error)await loadUsers()});
+ $('userRows').querySelectorAll('.reset-user-password').forEach(b=>b.onclick=()=>openAdminPasswordReset(b.dataset.id,b.dataset.name));
+}
+async function invokeAccessManager(body){
+  const{data,error}=await sb.functions.invoke('manage-exam-access',{body});
+  if(error){
+    const message=error?.context?.body?.error||error.message||'Servizio amministrativo non disponibile.';
+    throw new Error(message);
+  }
+  if(data?.error)throw new Error(data.error);
+  return data;
+}
+function validateNewPassword(p,c){if(p.length<8)throw new Error('La password deve contenere almeno 8 caratteri.');if(p!==c)throw new Error('Le password non coincidono.')}
+function openAdminPasswordReset(id,name){$('resetPasswordUserId').value=id;$('resetPasswordUser').textContent='Utente: '+name;$('adminNewPassword').value='';$('adminNewPasswordConfirm').value='';$('resetPasswordDialog').showModal()}
+
+function prepareStaffPassword(force=false){const p=$('newStaffPassword');if(!p)return;if(force||!p.value)p.value=makePassword(12)}
+$('saveSuperOwnPassword').onclick=async()=>{try{if(profile?.role!=='super_admin')throw new Error('Funzione riservata al Super Amministratore.');const p=$('superOwnNewPassword').value,c=$('superOwnNewPasswordConfirm').value;validateNewPassword(p,c);await invokeAccessManager({action:'reset_user_password',user_id:user.id,password:p});$('superOwnNewPassword').value='';$('superOwnNewPasswordConfirm').value='';note('Password del Super Amministratore aggiornata.')}catch(e){note(e.message,true)}};
+$('createStaffUserBtn').onclick=async()=>{try{if(!['super_admin','vice_admin'].includes(profile?.role))throw new Error('Non autorizzato.');const full_name=$('newStaffName').value.trim(),email=$('newStaffEmail').value.trim(),role=$('newStaffRole').value,password=$('newStaffPassword').value;if(!full_name)throw new Error('Inserisci nome e cognome.');if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Inserisci un indirizzo email valido.');if(profile.role==='vice_admin'&&role==='super_admin')throw new Error('Il Vice Amministratore non può creare Super Amministratori.');validateNewPassword(password,password);$('createStaffUserBtn').disabled=true;await invokeAccessManager({action:'create_staff_user',full_name,email,role,password});$('newStaffName').value='';$('newStaffEmail').value='';prepareStaffPassword(true);note('Utente creato correttamente.');if(profile.role==='super_admin')await loadUsers()}catch(e){note(e.message,true)}finally{$('createStaffUserBtn').disabled=false}};
+$('saveAdminPassword').onclick=async()=>{try{const id=$('resetPasswordUserId').value,p=$('adminNewPassword').value,c=$('adminNewPasswordConfirm').value;if(!isUuid(id))throw new Error('Utente non valido.');validateNewPassword(p,c);await invokeAccessManager({action:'reset_user_password',user_id:id,password:p});$('resetPasswordDialog').close();note('Password utente aggiornata.')}catch(e){note(e.message,true)}};
+$('createSessionBtn').onclick=async()=>{try{if(!$('sessionTitle').value.trim()||!$('commonUsername').value.trim())generateSessionIdentity(true);const d=await invokeAccessManager({action:'create_session',title:$('sessionTitle').value.trim(),common_username:$('commonUsername').value.trim(),discipline:$('sessionDiscipline').value,question_count:+$('sessionQuestions').value,duration_minutes:+$('sessionDuration').value,pass_percentage:+$('sessionPass').value,notes:$('sessionNotes').value.trim()||null});lastSessionCreatedId=d.session?.id||null;note('Sessione creata e pronta per inserire i Corsisti.');await refreshAll(true);$('sessionNotes').value='';generateSessionIdentity(true);prepareCandidateCredentials(true)}catch(e){note(e.message,true)}};
+$('createCandidateBtn').onclick=async()=>{try{
+ const sessionId=$('candidateSession').value,name=$('candidateName').value.trim(),code=$('candidateCode').value.trim(),p=$('newCandidatePassword').value;
+ setInvalid($('candidateSession'),!isUuid(sessionId));setInvalid($('candidateName'),!name);setInvalid($('candidateCode'),!code);setInvalid($('newCandidatePassword'),p.length<8);
+ if(!isUuid(sessionId))throw new Error('Crea o seleziona una sessione valida.');if(!name)throw new Error('Inserisci nome e cognome.');if(!code)throw new Error('Inserisci il codice candidato.');if(p.length<8)throw new Error('Password minima 8 caratteri.');
+ $('createCandidateBtn').disabled=true;const d=await invokeAccessManager({action:'create_candidate',session_id:sessionId,full_name:name,candidate_code:code,password:p});$('createCandidateBtn').disabled=false;
+ $('credentialResult').innerHTML=`<div class="card" style="background:#f0fdf4"><h3>Credenziali</h3><p><b>${d.candidate.full_name}</b></p><p>Username: <b>${d.common_username}</b></p><p>Password: <b>${p}</b></p><p class="status">Consegna ora queste credenziali: la password non viene archiviata in chiaro.</p></div>`;
+ $('candidateName').value='';$('candidateCode').value='';$('newCandidatePassword').value='';prepareCandidateCredentials(true);await refreshAll(true);note('Corsista, credenziali e prova assegnata creati automaticamente.')
+ }catch(e){$('createCandidateBtn').disabled=false;note(e.message,true)}};
+async function loadSessions(){
+ const{data,error}=await sb.from('exam_session_overview').select('*').order('created_at',{ascending:false});if(error)return note(error.message,true);
+ const rows=data||[],active=rows.filter(x=>x.active&&isUuid(x.id));
+ $('candidateSession').innerHTML=active.length?'<option value="">Seleziona una sessione</option>'+active.map(x=>`<option value="${x.id}">${x.title} — ${labels[x.discipline]}</option>`).join(''):'<option value="">Nessuna sessione attiva</option>';
+ $('candidateSession').disabled=!active.length;$('createCandidateBtn').disabled=!active.length;
+ if(active.length){const wanted=active.some(x=>x.id===lastSessionCreatedId)?lastSessionCreatedId:($('candidateSession').value||active[0].id);$('candidateSession').value=wanted;lastSessionCreatedId=null;prepareCandidateCredentials(false)}
+ const ds=$('sessionDeleteSelect');
+ if(ds){
+   const prev=ds.value;
+   ds.innerHTML=rows.length?rows.map(x=>`<option value="${x.id}">${x.title} — ${labels[x.discipline]} — ${x.candidate_count} corsisti</option>`).join(''):'<option value="">Nessuna sessione creata</option>';
+   if(rows.length){ds.value=rows.some(x=>x.id===prev)?prev:rows[0].id;$('deleteSelectedSession').disabled=false}else $('deleteSelectedSession').disabled=true;
+ }
+ $('sessionRows').innerHTML=rows.length?rows.map(x=>`<tr data-session-id="${x.id}"><td>${x.title}</td><td><b>${x.common_username}</b></td><td>${labels[x.discipline]}</td><td>${x.active_candidate_count}/${x.candidate_count}</td></tr>`).join(''):'<tr><td colspan="4"><div class="empty-state">Nessuna sessione creata.</div></td></tr>';
+ $('sessionRows').querySelectorAll('tr[data-session-id]').forEach(row=>row.onclick=()=>{if(ds){ds.value=row.dataset.sessionId;row.parentElement.querySelectorAll('tr').forEach(r=>r.classList.toggle('selected-card',r===row))}});
+}
+
+document.querySelectorAll('.settings-tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.settings-tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.settings-pane').forEach(p=>p.classList.toggle('active',p.id===b.dataset.pane))});
+['cfgAppName','cfgAppSubtitle','cfgLogoUrl'].forEach(id=>$(id)?.addEventListener('input',updateSettingsPreview));
+$('saveAllSettings').onclick=async()=>{
+ const ui=readAppSettingsForm();
+ const{error}=await sb.from('app_settings').upsert({id:1,settings:ui,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'id'});
+ if(error)return note(error.message,true);
+ for(const d of Object.keys(examSettingsCache))await persistExamConfig(d);
+ applyAppSettings(ui);
+ note('Impostazioni salvate e sincronizzate in tutta l’app.');
+};
+$('resetAppSettings').onclick=()=>{appSettings={...defaultAppSettings};applyAppSettings(appSettings);fillAppSettingsForm();note('Grafica predefinita ripristinata in anteprima. Premi Salva per renderla definitiva.')};
+$('refreshSessions').onclick=()=>refreshAll(false);
+$('deleteSelectedSession').onclick=async()=>{
+ try{
+  if(!['super_admin','vice_admin'].includes(profile?.role))throw new Error('Non autorizzato.');
+  const sessionId=$('sessionDeleteSelect').value;if(!isUuid(sessionId))throw new Error('Seleziona una sessione valida.');
+  const label=$('sessionDeleteSelect').selectedOptions[0]?.textContent||'questa sessione';
+  if(!confirm(`Eliminare definitivamente ${label}?\n\nVerranno eliminati anche gli account Corsista collegati.`))return;
+  $('deleteSelectedSession').disabled=true;
+  const result=await invokeAccessManager({action:'delete_session',session_id:sessionId});
+  note(`Sessione eliminata. Corsisti rimossi: ${result.deleted_candidates||0}.`);
+  await refreshAll(true);
+ }catch(e){note(e.message,true)}
+ finally{if($('sessionDeleteSelect')?.value)$('deleteSelectedSession').disabled=false}
+};
+$('refreshDashboard').onclick=()=>refreshAll(false);setupAutomationEvents();showLoginMode('student');
+boot();
+</script>
+
+
+
+
+
+
+</body></html>
