@@ -1,0 +1,10 @@
+{
+  "name": "K9 Academy",
+  "short_name": "K9 Academy",
+  "description": "Piattaforma esami K9 Academy",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f3f8",
+  "theme_color": "#5b21b6"
+}
