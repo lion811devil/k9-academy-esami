@@ -1,70 +1,22 @@
-
-const CACHE='k9-academy-v1890-security-exams-20261102';
-const CORE=['./','./index.html','./manifest.json','./icons/app-icon-192.png','./icons/app-icon-512.png'];
-
-self.addEventListener('install',event=>{
-  self.skipWaiting();
-  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));
-});
-
-self.addEventListener('activate',event=>{
-  event.waitUntil(
-    caches.keys()
-      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
-      .then(()=>self.clients.claim())
-  );
-});
-
+const PREFIX='k9-academy-';
+const CACHE=PREFIX+'v220-simplified-20261120';
+const CORE=['./','./index.html','./manifest.json','./assets/css/app.css','./assets/js/app.js','./icons/app-icon-192.png','./icons/app-icon-512.png'];
+const scope=new URL(self.registration.scope);
+const urls=new Set(CORE.map(path=>new URL(path,scope).href));
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith(PREFIX)&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{
-  const request=event.request;
-  if(request.method!=='GET')return;
-  const url=new URL(request.url);
-  if(url.pathname.endsWith('/supabase-config.json')){
-    event.respondWith(fetch(request,{cache:'no-store'}));
-    return;
-  }
-  const asset=url.pathname.endsWith('/manifest.json')||url.pathname.endsWith('/icons/app-icon-192.png')||url.pathname.endsWith('/icons/app-icon-512.png');
-  if(asset){
-    event.respondWith(
-      fetch(request,{cache:'no-store'})
-        .then(response=>{const copy=response.clone();caches.open(CACHE).then(c=>c.put(request,copy));return response})
-        .catch(()=>caches.match(request))
-    );
-    return;
-  }
-  if(request.mode==='navigate'){
-    event.respondWith(
-      fetch(request,{cache:'no-store'})
-        .then(response=>{
-          const copy=response.clone();
-          caches.open(CACHE).then(cache=>cache.put('./index.html',copy));
-          return response;
-        })
-        .catch(()=>caches.match('./index.html'))
-    );
-  }
+ const request=event.request;
+ if(request.method!=='GET')return;
+ const url=new URL(request.url);
+ if(url.origin!==scope.origin||!url.pathname.startsWith(scope.pathname))return;
+ if(url.pathname===new URL('./supabase-config.json',scope).pathname){event.respondWith(fetch(request,{cache:'no-store'}));return;}
+ const canonical=new URL(url.pathname,scope.origin).href;
+ if(!urls.has(canonical))return;
+ const isEntry=canonical===new URL('./',scope).href||canonical===new URL('./index.html',scope).href;
+ event.respondWith((async()=>{
+   const cache=await caches.open(CACHE);
+   try{const response=await fetch(request,{cache:'no-store'});if(response.ok&&!response.redirected)await cache.put(canonical,response.clone());return response;}
+   catch(error){const saved=await cache.match(canonical);if(saved)return saved;if(isEntry)return new Response('Connessione non disponibile. Riprova online.',{status:503});throw error;}
+ })());
 });
-
-// Release 1.61 fix operazioni utenti 2
-
-// Release 1.61 navigazione pratica
-
-// Release 1.61 navigazione definitiva
-
-// Release 1.61 condivisione credenziali Corsista
-
-// Release 1.61 valutazione professionale automatica
-
-// Release 1.61 archivio sessioni
-
-// Release 1.61 fix login dopo foto profilo
-
-// Release 1.69 indicazione idoneita manuale e leggibilita verbale PDF
-
-// Release 1.78 consolidamento schermate e flusso operativo
-
-// Release 1.85.3 - Registro audit professionale in italiano
-
-// Release 1.86 - Fase 4 fascicolo finale e tracciabilita PDF
-
-// Release 1.88 - Fase 6 audit finale e hardening permessi RPC
