@@ -1,0 +1,31 @@
+K9 ACADEMY ESAMI 2.2.2 - UNICO AGGIORNAMENTO CORRETTIVO
+
+Estrarre lo ZIP e caricare i file nei percorsi identici su GitHub.
+NON caricare lo ZIP come file della repository.
+NON eseguire nuovamente SQL 2.2.1.
+Il file in docs/sql-applied e' una COPIA STORICA GIA APPLICATA.
+PUBBLICARE anche la Edge Function aggiornata su Supabase.
+NON eliminare dati o file senza collaudo.
+
+Elenco dettagliato: docs/ELENCO_FILE.txt
+Guida installazione: docs/INSTALLAZIONE_PASSO_PASSO.md
+
+FILE IN QUESTO ZIP:
+AGGIUNGERE: .github/workflows/check-frontend.yml
+SOSTITUIRE: README.md
+SOSTITUIRE: assets/css/app.css
+SOSTITUIRE: assets/js/app.js
+SOSTITUIRE: docs/ELENCO_FILE.txt
+SOSTITUIRE: docs/INSTALLAZIONE_PASSO_PASSO.md
+AGGIUNGERE: docs/TEST_REPORT_2_2_2.md
+AGGIUNGERE: docs/sql-applied/20261120_2_2_1_GIA_APPLICATO_NON_RIESEGUIRE.sql
+SOSTITUIRE: index.html
+SOSTITUIRE: service-worker.js
+SOSTITUIRE: src/js/01-core.js
+SOSTITUIRE: src/js/03-pdf.js
+SOSTITUIRE: src/js/04-management.js
+SOSTITUIRE: src/js/05-question-bank.js
+SOSTITUIRE: src/js/06-users-events.js
+SOSTITUIRE: supabase/functions/manage-exam-access/index.ts
+SOSTITUIRE: tests/check_frontend.py
+AGGIUNGERE: tests/k9_regressions.mjs
