@@ -34,10 +34,11 @@ console.log('CSV, escaping e famiglie: OK');'''
 print(f'HTML: {len(p.ids)} ID senza duplicati; sintassi JavaScript OK.')
 
 # Protezione contro la regressione del raggruppamento e del conteggio famiglie.
-sql=(root/'supabase/migrations/20261120093000_k9_v2_2_1.sql').read_text()
+sql=(root/'docs/sql-applied/20261120_2_2_1_GIA_APPLICATO_NON_RIESEGUIRE.sql').read_text()
 assert 'eligible_families < ex.question_count' in sql
 assert 'family_key' in sql and 'hard_selected' in sql
 assert 'k9_question_family' in sql and 'medio' in sql and 'difficile' in sql
 assert 'K9QRCode' not in sql
 assert (root/'docs/DETECTION_REVISIONE_100_DOMANDE.csv').is_file()
 print('Guard famiglie e audit Detection: OK.')
+subprocess.run(['node',str(root/'tests/k9_regressions.mjs')],check=True)
