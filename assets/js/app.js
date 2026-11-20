@@ -872,7 +872,7 @@ $('loginBtn').onclick=async()=>{
  }
 };$('logoutBtn').onclick=logoutSafely;
 
-const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.0',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
+const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.2',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
 function bool(v){return v===true||v==='true'}
 
 let brandingObjectUrls={logo:'',icon:''},dynamicManifestUrl='',officialLogoBlobUrl='';
@@ -1300,9 +1300,9 @@ async function boot(){
    $('staffPanel').classList.remove('hidden');
    $('adminPanel').classList.remove('hidden');
    document.querySelectorAll('#adminPanel .super-only').forEach(el=>el.classList.toggle('hidden',data.role!=='super_admin'));
-   const superOption=$('newStaffRole')?.querySelector('[data-super-option="1"]');
-   if(superOption)superOption.hidden=data.role!=='super_admin';
-   if(data.role!=='super_admin'&&$('newStaffRole')?.value==='super_admin')$('newStaffRole').value='teacher';
+   const staffSelect=$('newStaffRole');
+   [...(staffSelect?.options||[])].forEach(o=>{if(['super_admin','vice_admin'].includes(o.value))o.hidden=data.role!=='super_admin'});
+   if(data.role!=='super_admin'&&['super_admin','vice_admin'].includes(staffSelect?.value))staffSelect.value='teacher';
 
    const jobs=[];
    if(can('students_view')||can('assign_exam'))jobs.push(loadStudents());
@@ -1945,7 +1945,7 @@ async function verifyDocumentCode(){
 }
 
 function certificateEligible(x){
- return x?.passed===true && x?.practical_outcome==='idoneo' && !!x?.practical_completed_at && mantrailingComponentsComplete(x);
+ return x?.passed===true && x?.practical_outcome==='idoneo' && !!x?.practical_completed_at && x?.practical_score!=null && x?.professional_score!=null && mantrailingComponentsComplete(x);
 }
 function selectedDocumentExam(){
  const id=$('documentExamSelect')?.value;
@@ -2583,7 +2583,7 @@ function renderArchive(){
   const theory=['submitted','expired'].includes(x.status)?`${x.score_percentage||0}%`:'—';
   const practice=x.practical_score!==null?`${x.practical_score}/50 · ${x.professional_score||0}/20`:'—';
   const payload=k9EncodeInline(JSON.stringify(x));
-  return `<tr onclick="openFinalResult('${payload}')"><td>${k9EscapeHtml(x.student_name||x.student_email||'—')}</td><td>${labels[x.discipline]||x.discipline}</td><td><span class="archive-pill ${x.status}">${x.status}</span></td><td class="archive-score">${theory}</td><td>${practice}</td><td>${new Date(x.assigned_at).toLocaleString('it-IT')}</td><td><button type="button" class="btn ghost" onclick="event.stopPropagation();openFinalResult('${payload}')">Apri</button></td></tr>`;
+  return `<tr onclick="openFinalResult('${payload}')"><td data-label="Corsista">${k9EscapeHtml(x.student_name||x.student_email||'—')}</td><td data-label="Disciplina">${k9EscapeHtml(labels[x.discipline]||x.discipline)}</td><td data-label="Stato"><span class="archive-pill ${x.status}">${x.status}</span></td><td data-label="Teoria" class="archive-score">${theory}</td><td data-label="Pratica">${practice}</td><td data-label="Data">${new Date(x.assigned_at).toLocaleString('it-IT')}</td><td data-label="Dettaglio"><button type="button" class="btn ghost" onclick="event.stopPropagation();openFinalResult('${payload}')">Apri</button></td></tr>`;
  }).join(''):'<tr><td colspan="7"><div class="empty-state">Nessun esame corrisponde ai filtri.</div></td></tr>';
 }
 function setupArchiveFilters(){
@@ -3004,15 +3004,15 @@ window.openFinalResult=encoded=>{
   <div class="result-tile"><div class="meta">Professionalità</div><div class="value">${professionalPct===null?'—':professionalPct+'%'}</div><div class="meta">${x.professional_score===null?'Non compilata':x.professional_score+'/20'}</div></div>
  </div>
  <div class="result-list">
-  <div class="result-list-row"><b>Disciplina</b><span>${labels[x.discipline]||x.discipline}</span></div>
+  <div class="result-list-row"><b>Disciplina</b><span>${k9EscapeHtml(labels[x.discipline]||x.discipline)}</span></div>
   <div class="result-list-row"><b>Domande teoriche</b><span>${x.question_count||0}</span></div>
   <div class="result-list-row"><b>Corrette</b><span>${x.correct_answers||0}</span></div>
   <div class="result-list-row"><b>Soglia teoria</b><span>${x.pass_percentage||0}%</span></div>
   <div class="result-list-row"><b>Esaminatore</b><span>${k9EscapeHtml(x.evaluator_name||x.evaluator_email||'Non assegnato')}</span></div>
   <div class="result-list-row"><b>Esito pratica</b><span>${displayedPracticeOutcome(x)}</span></div>
-  ${x.discipline==='mantrailing'?`<div class="result-list-row result-components-row"><b>Componenti estratte</b><span>${normalizePracticalComponents(x.practical_components).length?normalizePracticalComponents(x.practical_components).map((c,i)=>`Componente ${i+1}: ${c.name} — ${componentStatusLabel(c.status)}`).join('<br>'):'Non ancora generate'}</span></div>`:''}
+  ${x.discipline==='mantrailing'?`<div class="result-list-row result-components-row"><b>Componenti estratte</b><span>${normalizePracticalComponents(x.practical_components).length?normalizePracticalComponents(x.practical_components).map((c,i)=>`Componente ${i+1}: ${k9EscapeHtml(c.name)} — ${k9EscapeHtml(componentStatusLabel(c.status))}`).join('<br>'):'Non ancora generate'}</span></div>`:''}
   <div class="result-list-row"><b>Pratica finalizzata</b><span>${x.practical_completed_at?new Date(x.practical_completed_at).toLocaleString('it-IT'):'No'}</span></div>
-  <div class="result-list-row"><b>Osservazioni</b><span>${x.practical_notes||'—'}</span></div>
+  <div class="result-list-row"><b>Osservazioni</b><span>${k9EscapeHtml(x.practical_notes||'—')}</span></div>
  </div>`;
  setupDocumentControls();
  if($('resultCertificateBtn'))$('resultCertificateBtn').disabled=!certificateEligible(x);
@@ -3555,6 +3555,16 @@ function qbToggleText(btn){
  btn.textContent=expanded?'Riduci':'Mostra tutto';
 }
 window.qbToggleText=qbToggleText;
+function qbRefreshTextToggles(){
+ document.querySelectorAll('#qbRows .qb-text-toggle').forEach(btn=>{
+   const el=btn.previousElementSibling;
+   if(!el)return;
+   if(!el.classList.contains('expanded')){
+     btn.hidden=el.scrollHeight<=el.clientHeight+2;
+   }else btn.hidden=false;
+ });
+}
+
 
 function qbApplyQuickFilter(kind,value=''){
  if(kind==='all'){
@@ -3627,6 +3637,7 @@ function renderQuestionBank(){
  }).join(''):`<tr><td colspan="10"><div class="empty-state">${emptyText}</div></td></tr>`;
  $('qbPageLabel').textContent=qbTotal?`${qbOffset+1}–${qbOffset+rows.length} di ${qbTotal}`:'0 risultati';$('qbPrev').disabled=qbOffset===0;$('qbNext').disabled=qbOffset+rows.length>=qbTotal;$('qbSelectAll').checked=false;
  qbUpdateSelection();
+ if(typeof requestAnimationFrame==='function')requestAnimationFrame(qbRefreshTextToggles);
 }
 
 async function fetchAllRows(table,select='*',configure=null,pageSize=1000){
@@ -3650,10 +3661,38 @@ async function loadQuestionBank(){
  try{setupQuestionBank();await qbLoadSummary();await qbLoadPage();}catch(error){note(error.message,true)}
 }
 function qbClear(){['qbId','qbCode','qbCategory','qbConcept','qbSource','qbQuestion','qbA','qbB','qbC','qbD','qbExplanation'].forEach(id=>$(id).value='');$('qbDiscipline').value='dogsitter';$('qbDifficulty').value='medio';$('qbActive').value='true';$('qbValidation').value='da_verificare';$('qbVersionInfo').textContent='';$('qbHistoryList').textContent='';$('qbHistory').classList.add('hidden');$('qbCorrect').value='0';$('qbEditorTitle').textContent='Nuova domanda';$('qbPreviewBox').classList.add('hidden')}
-window.qbEdit=id=>{const x=questionBankData.find(q=>String(q.id)===String(id));if(!x)return;$('qbId').value=x.id;$('qbCode').value=x.code;$('qbDiscipline').value=x.discipline;$('qbCategory').value=x.category;$('qbDifficulty').value=x.difficulty||'medio';$('qbConcept').value=x.concept_id||'';$('qbSource').value=x.source_reference||'';$('qbActive').value=String(!!x.active);$('qbValidation').value=x.validation_status||'da_verificare';$('qbVersionInfo').textContent=`Versione ${x.k9_version||1} · variante ${x.variant_number||1}`;$('qbHistoryList').textContent='';$('qbHistory').classList.remove('hidden');$('qbQuestion').value=x.question_text;$('qbA').value=x.option_a;$('qbB').value=x.option_b;$('qbC').value=x.option_c;$('qbD').value=x.option_d;$('qbCorrect').value=String(x.correct_option);$('qbExplanation').value=x.explanation||'';$('qbEditorTitle').textContent='Modifica domanda';$('qbEditor').classList.remove('hidden')};
-window.qbDuplicate=id=>{qbEdit(id);$('qbId').value='';$('qbCode').value='';$('qbValidation').value='da_verificare';$('qbHistory').classList.add('hidden');$('qbVersionInfo').textContent='Nuova variante';$('qbEditorTitle').textContent='Crea variante — modifica il testo'};
+function qbRevealEditor(){
+ const editor=$('qbEditor');if(!editor)return;
+ if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>{
+   editor.scrollIntoView({behavior:'smooth',block:'start'});
+   setTimeout(()=>$('qbQuestion')?.focus({preventScroll:true}),180);
+ });
+}
+window.qbEdit=id=>{const x=questionBankData.find(q=>String(q.id)===String(id));if(!x)return;$('qbId').value=x.id;$('qbCode').value=x.code;$('qbDiscipline').value=x.discipline;$('qbCategory').value=x.category;$('qbDifficulty').value=x.difficulty||'medio';$('qbConcept').value=x.concept_id||'';$('qbSource').value=x.source_reference||'';$('qbActive').value=String(!!x.active);$('qbValidation').value=x.validation_status||'da_verificare';$('qbVersionInfo').textContent=`Versione ${x.k9_version||1} · variante ${x.variant_number||1}`;$('qbHistoryList').textContent='';$('qbHistory').classList.remove('hidden');$('qbQuestion').value=x.question_text;$('qbA').value=x.option_a;$('qbB').value=x.option_b;$('qbC').value=x.option_c;$('qbD').value=x.option_d;$('qbCorrect').value=String(x.correct_option);$('qbExplanation').value=x.explanation||'';$('qbEditorTitle').textContent='Modifica domanda';$('qbEditor').classList.remove('hidden');qbRevealEditor()};
+window.qbDuplicate=id=>{qbEdit(id);$('qbId').value='';$('qbCode').value='';$('qbValidation').value='da_verificare';$('qbHistory').classList.add('hidden');$('qbVersionInfo').textContent='Nuova variante: modifica il testo e verifica le alternative.';$('qbEditorTitle').textContent='Crea variante — modifica il testo';qbRevealEditor()};
 function qbPayload(){const d=$('qbDiscipline').value;return{code:$('qbCode').value.trim()||`${d.toUpperCase()}-${Date.now()}`,discipline:d,category:$('qbCategory').value.trim(),difficulty:$('qbDifficulty').value,validation_status:$('qbValidation').value,concept_id:$('qbConcept').value.trim()||null,source_reference:$('qbSource').value.trim()||null,question_text:$('qbQuestion').value.trim(),option_a:$('qbA').value.trim(),option_b:$('qbB').value.trim(),option_c:$('qbC').value.trim(),option_d:$('qbD').value.trim(),correct_option:Number($('qbCorrect').value),explanation:$('qbExplanation').value.trim()||null,active:$('qbActive').value==='true',updated_at:new Date().toISOString()}}
-async function qbSave(){if(!['medio','difficile'].includes($('qbDifficulty').value))return note('Per gli esami scegliere difficoltà media o difficile.',true);if(!requirePermission('question_bank','Banca domande non abilitata per questo ruolo.'))return;const v=qbPayload();if(!v.category||!v.question_text||!v.explanation||![v.option_a,v.option_b,v.option_c,v.option_d].every(Boolean))return note('Completa domanda, categoria, spiegazione e quattro risposte.',true);if(new Set([v.option_a,v.option_b,v.option_c,v.option_d].map(qbNorm)).size!==4)return note('Le quattro alternative devono essere diverse.',true);const id=$('qbId').value;const duplicate=questionBankData.find(x=>String(x.id)!==String(id)&&x.discipline===v.discipline&&qbNorm(x.question_text)===qbNorm(v.question_text));if(duplicate)return note(`Domanda già presente (${duplicate.code}). Modifica il testo prima di salvare.`,true);const res=id?await sb.from('question_bank').update(v).eq('id',id):await sb.from('question_bank').insert(v);if(res.error)return note(res.error.message,true);$('qbEditor').classList.add('hidden');saveNote(id?'Salvataggio completato — domanda aggiornata.':'Salvataggio completato — domanda creata.');await refreshQuestionBankAfterChange()}
+async function qbSave(){
+ if(!requirePermission('question_bank','Banca domande non abilitata per questo ruolo.'))return;
+ const v=qbPayload(),id=$('qbId').value;
+ // Le domande facili gia' esistenti restano modificabili ma non vengono estratte dagli esami.
+ if(!['facile','medio','difficile'].includes(v.difficulty))return note('Livello di difficolta non valido.',true);
+ if(!v.category||!v.question_text||!v.explanation||![v.option_a,v.option_b,v.option_c,v.option_d].every(Boolean))return note('Completa domanda, categoria, spiegazione e quattro risposte.',true);
+ if(new Set([v.option_a,v.option_b,v.option_c,v.option_d].map(qbNorm)).size!==4)return note('Le quattro alternative devono essere diverse.',true);
+ const btn=$('qbSave');if(btn?.disabled)return;
+ if(btn)btn.disabled=true;
+ try{
+   // Controlla tutte le pagine della disciplina; il vecchio codice controllava solo le 50 visibili.
+   const existing=await fetchAllRows('question_bank','id,code,question_text',q=>q.eq('discipline',v.discipline).order('id'),1000);
+   const duplicate=existing.find(x=>String(x.id)!==String(id)&&qbNorm(x.question_text)===qbNorm(v.question_text));
+   if(duplicate)throw new Error(`Domanda gia presente (${duplicate.code}). Modifica il testo prima di salvare.`);
+   const res=id?await sb.from('question_bank').update(v).eq('id',id):await sb.from('question_bank').insert(v);
+   if(res.error)throw res.error;
+   $('qbEditor').classList.add('hidden');
+   saveNote(id?'Salvataggio completato — domanda aggiornata.':'Salvataggio completato — domanda creata.');
+   await refreshQuestionBankAfterChange();
+ }catch(e){note(e.message||'Salvataggio non riuscito.',true)}finally{if(btn)btn.disabled=false}
+}
+
 async function qbDeleteSelected(){if(!requirePermission('question_bank','Banca domande non abilitata per questo ruolo.'))return;const ids=[...document.querySelectorAll('.qb-check:checked')].map(x=>Number(x.value));if(!ids.length)return note('Seleziona almeno una domanda.',true);if(!confirm(`Eliminare definitivamente ${ids.length} domande selezionate? Le domande già usate negli esami non possono essere cancellate; puoi disattivarle.`))return;const{error}=await sb.from('question_bank').delete().in('id',ids);if(error)return note(error.message,true);note('Domande eliminate.');await refreshQuestionBankAfterChange()}
 async function qbSetSelectedActive(active){if(!requirePermission('question_bank','Banca domande non abilitata per questo ruolo.'))return;const ids=qbSelectedIds();if(!ids.length)return note('Seleziona almeno una domanda.',true);const{error}=await sb.from('question_bank').update({active,updated_at:new Date().toISOString()}).in('id',ids);if(error)return note(error.message,true);saveNote(`Salvataggio completato — ${ids.length} domande ${active?'attivate':'disattivate'}.`);await refreshQuestionBankAfterChange()}
 function qbCsvCell(v){const s=String(v??'');return '"'+s.replace(/"/g,'""')+'"'}
@@ -3714,7 +3753,7 @@ function setupQuestionBank(){
    }
  });
  const discipline=$('qbDisciplineFilter');
- $('qbNew').onclick=()=>{qbClear();if(qbSelectedDiscipline)$('qbDiscipline').value=qbSelectedDiscipline;$('qbEditor').classList.remove('hidden')};
+ $('qbNew').onclick=()=>{qbClear();if(qbSelectedDiscipline)$('qbDiscipline').value=qbSelectedDiscipline;$('qbEditor').classList.remove('hidden');qbRevealEditor()};
  $('qbSave').onclick=qbSave;
  $('qbPreview').onclick=qbPreview;
  $('qbCancel').onclick=()=>$('qbEditor').classList.add('hidden');
@@ -4156,7 +4195,7 @@ if($('refreshUsersBtn'))$('refreshUsersBtn').onclick=loadUsers;
 if($('openUserManagementBtn'))$('openUserManagementBtn').onclick=()=>openUserManagement('');
 document.querySelectorAll('.dashboard-user-role').forEach(b=>b.onclick=()=>openUserManagement(b.dataset.role||''));
 $('saveSuperOwnPassword').onclick=async()=>{try{if(profile?.role!=='super_admin')throw new Error('Funzione riservata al Super Amministratore.');const p=$('superOwnNewPassword').value,c=$('superOwnNewPasswordConfirm').value;validateNewPassword(p,c);await invokeAccessManager({action:'reset_user_password',user_id:user.id,password:p});$('superOwnNewPassword').value='';$('superOwnNewPasswordConfirm').value='';note('Password del Super Amministratore aggiornata.')}catch(e){note(e.message,true)}};
-$('createStaffUserBtn').onclick=async()=>{try{if(!requirePermission('users_create','Creazione utenti non abilitata per questo ruolo.'))return;const full_name=$('newStaffName').value.trim(),email=$('newStaffEmail').value.trim(),role=$('newStaffRole').value,password=$('newStaffPassword').value;if(!full_name)throw new Error('Inserisci nome e cognome.');if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Inserisci un indirizzo email valido.');if(profile.role!=='super_admin'&&role==='super_admin')throw new Error('Solo il Super Amministratore può creare Super Amministratori.');validateNewPassword(password,password);$('createStaffUserBtn').disabled=true;await invokeAccessManager({action:'create_staff_user',full_name,email,role,password});$('newStaffName').value='';$('newStaffEmail').value='';prepareStaffPassword(true);note('Utente creato correttamente.');if(profile.role==='super_admin')await loadUsers()}catch(e){note(e.message,true)}finally{$('createStaffUserBtn').disabled=false}};
+$('createStaffUserBtn').onclick=async()=>{try{if(!requirePermission('users_create','Creazione utenti non abilitata per questo ruolo.'))return;const full_name=$('newStaffName').value.trim(),email=$('newStaffEmail').value.trim(),role=$('newStaffRole').value,password=$('newStaffPassword').value;if(!full_name)throw new Error('Inserisci nome e cognome.');if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Inserisci un indirizzo email valido.');if(profile.role!=='super_admin'&&['super_admin','vice_admin'].includes(role))throw new Error('Solo il Super Amministratore può creare Super o Vice Amministratori.');validateNewPassword(password,password);$('createStaffUserBtn').disabled=true;await invokeAccessManager({action:'create_staff_user',full_name,email,role,password});$('newStaffName').value='';$('newStaffEmail').value='';prepareStaffPassword(true);note('Utente creato correttamente.');if(profile.role==='super_admin')await loadUsers()}catch(e){note(e.message,true)}finally{$('createStaffUserBtn').disabled=false}};
 $('saveAdminPassword').onclick=async()=>{try{const id=$('resetPasswordUserId').value,p=$('adminNewPassword').value,c=$('adminNewPasswordConfirm').value;if(!isUuid(id))throw new Error('Utente non valido.');validateNewPassword(p,c);await invokeAccessManager({action:'reset_user_password',user_id:id,password:p});$('resetPasswordDialog').close();note('Password utente aggiornata.')}catch(e){note(e.message,true)}};
 $('createSessionBtn').onclick=async()=>{try{if(!requirePermission('sessions_manage','Preparazione corsi non abilitata per questo ruolo.'))return;if(profile?.role==='super_admin'&&!validateQuestionAvailability($('sessionDiscipline').value,$('sessionQuestions').value))return;const studentIds=[...document.querySelectorAll('#courseStudentList input[type=checkbox]:checked')].map(x=>x.value).filter(isUuid);if(!studentIds.length)throw new Error('Seleziona almeno un Corsista da inserire nel corso.');if(!$('sessionTitle').value.trim()||!$('commonUsername').value.trim())generateSessionIdentity(true);$('createSessionBtn').disabled=true;const d=await invokeAccessManager({action:'create_course_with_students',title:$('sessionTitle').value.trim(),common_username:$('commonUsername').value.trim(),discipline:$('sessionDiscipline').value,question_count:+$('sessionQuestions').value,duration_minutes:+$('sessionDuration').value,pass_percentage:+$('sessionPass').value,notes:$('sessionNotes').value.trim()||null,student_ids:studentIds});lastSessionCreatedId=d.session?.id||null;note(`Corso preparato: ${d.assigned_count||studentIds.length} Corsisti inseriti e prove assegnate.`);$('sessionNotes').value='';generateSessionIdentity(true);await refreshAll(true)}catch(e){note(e.message,true)}finally{$('createSessionBtn').disabled=false}};
 
@@ -4232,11 +4271,11 @@ function renderCandidateCredentialDelivery(c){
   box.innerHTML=`
     <div class="credential-delivery">
       <h3>Credenziali pronte</h3>
-      <p><b>${c.full_name}</b> può riceverle direttamente dal telefono.</p>
+      <p><b>${k9EscapeHtml(c.full_name)}</b> può riceverle direttamente dal telefono.</p>
       <div class="credential-data">
-        <div class="credential-row"><span>Username</span><b>${c.username}</b></div>
-        <div class="credential-row"><span>Password</span><b>${c.password}</b></div>
-        <div class="credential-row"><span>Link accesso</span><b style="font-size:12px">${c.access_url||candidateAccessUrl()}</b></div>
+        <div class="credential-row"><span>Username</span><b>${k9EscapeHtml(c.username)}</b></div>
+        <div class="credential-row"><span>Password</span><b>${k9EscapeHtml(c.password)}</b></div>
+        <div class="credential-row"><span>Link accesso</span><b style="font-size:12px">${k9EscapeHtml(c.access_url||candidateAccessUrl())}</b></div>
       </div>
       <div class="credential-actions">
         <button type="button" class="btn primary" id="shareCandidateCredentialsBtn">Invia</button>
@@ -4252,6 +4291,7 @@ function renderCandidateCredentialDelivery(c){
   $('copyCandidateCredentialsBtn').onclick=copyCandidateCredentials;
 }
 
+$('toggleCandidatePassword').onclick=()=>{const x=$('newCandidatePassword');const showing=x.type==='text';x.type=showing?'password':'text';$('toggleCandidatePassword').textContent=showing?'Mostra password':'Nascondi password'};
 $('createCandidateBtn').onclick=async()=>{try{if(!requirePermission('candidates_create','Creazione corsisti non abilitata per questo ruolo.'))return;
  const name=$('candidateName').value.trim(),fiscalCode=$('candidateFiscalCode').value.trim().toUpperCase(),birthDate=$('candidateBirthDate').value,birthPlace=$('candidateBirthPlace').value.trim(),code=$('candidateCode').value.trim().toLowerCase(),p=$('newCandidatePassword').value;
  const fiscalOk=/^[A-Z0-9]{16}$/.test(fiscalCode);
