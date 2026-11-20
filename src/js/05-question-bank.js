@@ -69,6 +69,16 @@ function qbToggleText(btn){
  btn.textContent=expanded?'Riduci':'Mostra tutto';
 }
 window.qbToggleText=qbToggleText;
+function qbRefreshTextToggles(){
+ document.querySelectorAll('#qbRows .qb-text-toggle').forEach(btn=>{
+   const el=btn.previousElementSibling;
+   if(!el)return;
+   if(!el.classList.contains('expanded')){
+     btn.hidden=el.scrollHeight<=el.clientHeight+2;
+   }else btn.hidden=false;
+ });
+}
+
 
 function qbApplyQuickFilter(kind,value=''){
  if(kind==='all'){
@@ -141,6 +151,7 @@ function renderQuestionBank(){
  }).join(''):`<tr><td colspan="10"><div class="empty-state">${emptyText}</div></td></tr>`;
  $('qbPageLabel').textContent=qbTotal?`${qbOffset+1}–${qbOffset+rows.length} di ${qbTotal}`:'0 risultati';$('qbPrev').disabled=qbOffset===0;$('qbNext').disabled=qbOffset+rows.length>=qbTotal;$('qbSelectAll').checked=false;
  qbUpdateSelection();
+ if(typeof requestAnimationFrame==='function')requestAnimationFrame(qbRefreshTextToggles);
 }
 
 async function fetchAllRows(table,select='*',configure=null,pageSize=1000){
@@ -164,10 +175,38 @@ async function loadQuestionBank(){
  try{setupQuestionBank();await qbLoadSummary();await qbLoadPage();}catch(error){note(error.message,true)}
 }
 function qbClear(){['qbId','qbCode','qbCategory','qbConcept','qbSource','qbQuestion','qbA','qbB','qbC','qbD','qbExplanation'].forEach(id=>$(id).value='');$('qbDiscipline').value='dogsitter';$('qbDifficulty').value='medio';$('qbActive').value='true';$('qbValidation').value='da_verificare';$('qbVersionInfo').textContent='';$('qbHistoryList').textContent='';$('qbHistory').classList.add('hidden');$('qbCorrect').value='0';$('qbEditorTitle').textContent='Nuova domanda';$('qbPreviewBox').classList.add('hidden')}
-window.qbEdit=id=>{const x=questionBankData.find(q=>String(q.id)===String(id));if(!x)return;$('qbId').value=x.id;$('qbCode').value=x.code;$('qbDiscipline').value=x.discipline;$('qbCategory').value=x.category;$('qbDifficulty').value=x.difficulty||'medio';$('qbConcept').value=x.concept_id||'';$('qbSource').value=x.source_reference||'';$('qbActive').value=String(!!x.active);$('qbValidation').value=x.validation_status||'da_verificare';$('qbVersionInfo').textContent=`Versione ${x.k9_version||1} · variante ${x.variant_number||1}`;$('qbHistoryList').textContent='';$('qbHistory').classList.remove('hidden');$('qbQuestion').value=x.question_text;$('qbA').value=x.option_a;$('qbB').value=x.option_b;$('qbC').value=x.option_c;$('qbD').value=x.option_d;$('qbCorrect').value=String(x.correct_option);$('qbExplanation').value=x.explanation||'';$('qbEditorTitle').textContent='Modifica domanda';$('qbEditor').classList.remove('hidden')};
-window.qbDuplicate=id=>{qbEdit(id);$('qbId').value='';$('qbCode').value='';$('qbValidation').value='da_verificare';$('qbHistory').classList.add('hidden');$('qbVersionInfo').textContent='Nuova variante';$('qbEditorTitle').textContent='Crea variante — modifica il testo'};
+function qbRevealEditor(){
+ const editor=$('qbEditor');if(!editor)return;
+ if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>{
+   editor.scrollIntoView({behavior:'smooth',block:'start'});
+   setTimeout(()=>$('qbQuestion')?.focus({preventScroll:true}),180);
+ });
+}
+window.qbEdit=id=>{const x=questionBankData.find(q=>String(q.id)===String(id));if(!x)return;$('qbId').value=x.id;$('qbCode').value=x.code;$('qbDiscipline').value=x.discipline;$('qbCategory').value=x.category;$('qbDifficulty').value=x.difficulty||'medio';$('qbConcept').value=x.concept_id||'';$('qbSource').value=x.source_reference||'';$('qbActive').value=String(!!x.active);$('qbValidation').value=x.validation_status||'da_verificare';$('qbVersionInfo').textContent=`Versione ${x.k9_version||1} · variante ${x.variant_number||1}`;$('qbHistoryList').textContent='';$('qbHistory').classList.remove('hidden');$('qbQuestion').value=x.question_text;$('qbA').value=x.option_a;$('qbB').value=x.option_b;$('qbC').value=x.option_c;$('qbD').value=x.option_d;$('qbCorrect').value=String(x.correct_option);$('qbExplanation').value=x.explanation||'';$('qbEditorTitle').textContent='Modifica domanda';$('qbEditor').classList.remove('hidden');qbRevealEditor()};
+window.qbDuplicate=id=>{qbEdit(id);$('qbId').value='';$('qbCode').value='';$('qbValidation').value='da_verificare';$('qbHistory').classList.add('hidden');$('qbVersionInfo').textContent='Nuova variante: modifica il testo e verifica le alternative.';$('qbEditorTitle').textContent='Crea variante — modifica il testo';qbRevealEditor()};
 function qbPayload(){const d=$('qbDiscipline').value;return{code:$('qbCode').value.trim()||`${d.toUpperCase()}-${Date.now()}`,discipline:d,category:$('qbCategory').value.trim(),difficulty:$('qbDifficulty').value,validation_status:$('qbValidation').value,concept_id:$('qbConcept').value.trim()||null,source_reference:$('qbSource').value.trim()||null,question_text:$('qbQuestion').value.trim(),option_a:$('qbA').value.trim(),option_b:$('qbB').value.trim(),option_c:$('qbC').value.trim(),option_d:$('qbD').value.trim(),correct_option:Number($('qbCorrect').value),explanation:$('qbExplanation').value.trim()||null,active:$('qbActive').value==='true',updated_at:new Date().toISOString()}}
-async function qbSave(){if(!['medio','difficile'].includes($('qbDifficulty').value))return note('Per gli esami scegliere difficoltà media o difficile.',true);if(!requirePermission('question_bank','Banca domande non abilitata per questo ruolo.'))return;const v=qbPayload();if(!v.category||!v.question_text||!v.explanation||![v.option_a,v.option_b,v.option_c,v.option_d].every(Boolean))return note('Completa domanda, categoria, spiegazione e quattro risposte.',true);if(new Set([v.option_a,v.option_b,v.option_c,v.option_d].map(qbNorm)).size!==4)return note('Le quattro alternative devono essere diverse.',true);const id=$('qbId').value;const duplicate=questionBankData.find(x=>String(x.id)!==String(id)&&x.discipline===v.discipline&&qbNorm(x.question_text)===qbNorm(v.question_text));if(duplicate)return note(`Domanda già presente (${duplicate.code}). Modifica il testo prima di salvare.`,true);const res=id?await sb.from('question_bank').update(v).eq('id',id):await sb.from('question_bank').insert(v);if(res.error)return note(res.error.message,true);$('qbEditor').classList.add('hidden');saveNote(id?'Salvataggio completato — domanda aggiornata.':'Salvataggio completato — domanda creata.');await refreshQuestionBankAfterChange()}
+async function qbSave(){
+ if(!requirePermission('question_bank','Banca domande non abilitata per questo ruolo.'))return;
+ const v=qbPayload(),id=$('qbId').value;
+ // Le domande facili gia' esistenti restano modificabili ma non vengono estratte dagli esami.
+ if(!['facile','medio','difficile'].includes(v.difficulty))return note('Livello di difficolta non valido.',true);
+ if(!v.category||!v.question_text||!v.explanation||![v.option_a,v.option_b,v.option_c,v.option_d].every(Boolean))return note('Completa domanda, categoria, spiegazione e quattro risposte.',true);
+ if(new Set([v.option_a,v.option_b,v.option_c,v.option_d].map(qbNorm)).size!==4)return note('Le quattro alternative devono essere diverse.',true);
+ const btn=$('qbSave');if(btn?.disabled)return;
+ if(btn)btn.disabled=true;
+ try{
+   // Controlla tutte le pagine della disciplina; il vecchio codice controllava solo le 50 visibili.
+   const existing=await fetchAllRows('question_bank','id,code,question_text',q=>q.eq('discipline',v.discipline).order('id'),1000);
+   const duplicate=existing.find(x=>String(x.id)!==String(id)&&qbNorm(x.question_text)===qbNorm(v.question_text));
+   if(duplicate)throw new Error(`Domanda gia presente (${duplicate.code}). Modifica il testo prima di salvare.`);
+   const res=id?await sb.from('question_bank').update(v).eq('id',id):await sb.from('question_bank').insert(v);
+   if(res.error)throw res.error;
+   $('qbEditor').classList.add('hidden');
+   saveNote(id?'Salvataggio completato — domanda aggiornata.':'Salvataggio completato — domanda creata.');
+   await refreshQuestionBankAfterChange();
+ }catch(e){note(e.message||'Salvataggio non riuscito.',true)}finally{if(btn)btn.disabled=false}
+}
+
 async function qbDeleteSelected(){if(!requirePermission('question_bank','Banca domande non abilitata per questo ruolo.'))return;const ids=[...document.querySelectorAll('.qb-check:checked')].map(x=>Number(x.value));if(!ids.length)return note('Seleziona almeno una domanda.',true);if(!confirm(`Eliminare definitivamente ${ids.length} domande selezionate? Le domande già usate negli esami non possono essere cancellate; puoi disattivarle.`))return;const{error}=await sb.from('question_bank').delete().in('id',ids);if(error)return note(error.message,true);note('Domande eliminate.');await refreshQuestionBankAfterChange()}
 async function qbSetSelectedActive(active){if(!requirePermission('question_bank','Banca domande non abilitata per questo ruolo.'))return;const ids=qbSelectedIds();if(!ids.length)return note('Seleziona almeno una domanda.',true);const{error}=await sb.from('question_bank').update({active,updated_at:new Date().toISOString()}).in('id',ids);if(error)return note(error.message,true);saveNote(`Salvataggio completato — ${ids.length} domande ${active?'attivate':'disattivate'}.`);await refreshQuestionBankAfterChange()}
 function qbCsvCell(v){const s=String(v??'');return '"'+s.replace(/"/g,'""')+'"'}
@@ -228,7 +267,7 @@ function setupQuestionBank(){
    }
  });
  const discipline=$('qbDisciplineFilter');
- $('qbNew').onclick=()=>{qbClear();if(qbSelectedDiscipline)$('qbDiscipline').value=qbSelectedDiscipline;$('qbEditor').classList.remove('hidden')};
+ $('qbNew').onclick=()=>{qbClear();if(qbSelectedDiscipline)$('qbDiscipline').value=qbSelectedDiscipline;$('qbEditor').classList.remove('hidden');qbRevealEditor()};
  $('qbSave').onclick=qbSave;
  $('qbPreview').onclick=qbPreview;
  $('qbCancel').onclick=()=>$('qbEditor').classList.add('hidden');

@@ -92,7 +92,7 @@ function renderArchive(){
   const theory=['submitted','expired'].includes(x.status)?`${x.score_percentage||0}%`:'—';
   const practice=x.practical_score!==null?`${x.practical_score}/50 · ${x.professional_score||0}/20`:'—';
   const payload=k9EncodeInline(JSON.stringify(x));
-  return `<tr onclick="openFinalResult('${payload}')"><td>${k9EscapeHtml(x.student_name||x.student_email||'—')}</td><td>${labels[x.discipline]||x.discipline}</td><td><span class="archive-pill ${x.status}">${x.status}</span></td><td class="archive-score">${theory}</td><td>${practice}</td><td>${new Date(x.assigned_at).toLocaleString('it-IT')}</td><td><button type="button" class="btn ghost" onclick="event.stopPropagation();openFinalResult('${payload}')">Apri</button></td></tr>`;
+  return `<tr onclick="openFinalResult('${payload}')"><td data-label="Corsista">${k9EscapeHtml(x.student_name||x.student_email||'—')}</td><td data-label="Disciplina">${k9EscapeHtml(labels[x.discipline]||x.discipline)}</td><td data-label="Stato"><span class="archive-pill ${x.status}">${x.status}</span></td><td data-label="Teoria" class="archive-score">${theory}</td><td data-label="Pratica">${practice}</td><td data-label="Data">${new Date(x.assigned_at).toLocaleString('it-IT')}</td><td data-label="Dettaglio"><button type="button" class="btn ghost" onclick="event.stopPropagation();openFinalResult('${payload}')">Apri</button></td></tr>`;
  }).join(''):'<tr><td colspan="7"><div class="empty-state">Nessun esame corrisponde ai filtri.</div></td></tr>';
 }
 function setupArchiveFilters(){
@@ -513,15 +513,15 @@ window.openFinalResult=encoded=>{
   <div class="result-tile"><div class="meta">Professionalità</div><div class="value">${professionalPct===null?'—':professionalPct+'%'}</div><div class="meta">${x.professional_score===null?'Non compilata':x.professional_score+'/20'}</div></div>
  </div>
  <div class="result-list">
-  <div class="result-list-row"><b>Disciplina</b><span>${labels[x.discipline]||x.discipline}</span></div>
+  <div class="result-list-row"><b>Disciplina</b><span>${k9EscapeHtml(labels[x.discipline]||x.discipline)}</span></div>
   <div class="result-list-row"><b>Domande teoriche</b><span>${x.question_count||0}</span></div>
   <div class="result-list-row"><b>Corrette</b><span>${x.correct_answers||0}</span></div>
   <div class="result-list-row"><b>Soglia teoria</b><span>${x.pass_percentage||0}%</span></div>
   <div class="result-list-row"><b>Esaminatore</b><span>${k9EscapeHtml(x.evaluator_name||x.evaluator_email||'Non assegnato')}</span></div>
   <div class="result-list-row"><b>Esito pratica</b><span>${displayedPracticeOutcome(x)}</span></div>
-  ${x.discipline==='mantrailing'?`<div class="result-list-row result-components-row"><b>Componenti estratte</b><span>${normalizePracticalComponents(x.practical_components).length?normalizePracticalComponents(x.practical_components).map((c,i)=>`Componente ${i+1}: ${c.name} — ${componentStatusLabel(c.status)}`).join('<br>'):'Non ancora generate'}</span></div>`:''}
+  ${x.discipline==='mantrailing'?`<div class="result-list-row result-components-row"><b>Componenti estratte</b><span>${normalizePracticalComponents(x.practical_components).length?normalizePracticalComponents(x.practical_components).map((c,i)=>`Componente ${i+1}: ${k9EscapeHtml(c.name)} — ${k9EscapeHtml(componentStatusLabel(c.status))}`).join('<br>'):'Non ancora generate'}</span></div>`:''}
   <div class="result-list-row"><b>Pratica finalizzata</b><span>${x.practical_completed_at?new Date(x.practical_completed_at).toLocaleString('it-IT'):'No'}</span></div>
-  <div class="result-list-row"><b>Osservazioni</b><span>${x.practical_notes||'—'}</span></div>
+  <div class="result-list-row"><b>Osservazioni</b><span>${k9EscapeHtml(x.practical_notes||'—')}</span></div>
  </div>`;
  setupDocumentControls();
  if($('resultCertificateBtn'))$('resultCertificateBtn').disabled=!certificateEligible(x);

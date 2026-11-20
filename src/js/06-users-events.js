@@ -397,7 +397,7 @@ if($('refreshUsersBtn'))$('refreshUsersBtn').onclick=loadUsers;
 if($('openUserManagementBtn'))$('openUserManagementBtn').onclick=()=>openUserManagement('');
 document.querySelectorAll('.dashboard-user-role').forEach(b=>b.onclick=()=>openUserManagement(b.dataset.role||''));
 $('saveSuperOwnPassword').onclick=async()=>{try{if(profile?.role!=='super_admin')throw new Error('Funzione riservata al Super Amministratore.');const p=$('superOwnNewPassword').value,c=$('superOwnNewPasswordConfirm').value;validateNewPassword(p,c);await invokeAccessManager({action:'reset_user_password',user_id:user.id,password:p});$('superOwnNewPassword').value='';$('superOwnNewPasswordConfirm').value='';note('Password del Super Amministratore aggiornata.')}catch(e){note(e.message,true)}};
-$('createStaffUserBtn').onclick=async()=>{try{if(!requirePermission('users_create','Creazione utenti non abilitata per questo ruolo.'))return;const full_name=$('newStaffName').value.trim(),email=$('newStaffEmail').value.trim(),role=$('newStaffRole').value,password=$('newStaffPassword').value;if(!full_name)throw new Error('Inserisci nome e cognome.');if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Inserisci un indirizzo email valido.');if(profile.role!=='super_admin'&&role==='super_admin')throw new Error('Solo il Super Amministratore può creare Super Amministratori.');validateNewPassword(password,password);$('createStaffUserBtn').disabled=true;await invokeAccessManager({action:'create_staff_user',full_name,email,role,password});$('newStaffName').value='';$('newStaffEmail').value='';prepareStaffPassword(true);note('Utente creato correttamente.');if(profile.role==='super_admin')await loadUsers()}catch(e){note(e.message,true)}finally{$('createStaffUserBtn').disabled=false}};
+$('createStaffUserBtn').onclick=async()=>{try{if(!requirePermission('users_create','Creazione utenti non abilitata per questo ruolo.'))return;const full_name=$('newStaffName').value.trim(),email=$('newStaffEmail').value.trim(),role=$('newStaffRole').value,password=$('newStaffPassword').value;if(!full_name)throw new Error('Inserisci nome e cognome.');if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Inserisci un indirizzo email valido.');if(profile.role!=='super_admin'&&['super_admin','vice_admin'].includes(role))throw new Error('Solo il Super Amministratore può creare Super o Vice Amministratori.');validateNewPassword(password,password);$('createStaffUserBtn').disabled=true;await invokeAccessManager({action:'create_staff_user',full_name,email,role,password});$('newStaffName').value='';$('newStaffEmail').value='';prepareStaffPassword(true);note('Utente creato correttamente.');if(profile.role==='super_admin')await loadUsers()}catch(e){note(e.message,true)}finally{$('createStaffUserBtn').disabled=false}};
 $('saveAdminPassword').onclick=async()=>{try{const id=$('resetPasswordUserId').value,p=$('adminNewPassword').value,c=$('adminNewPasswordConfirm').value;if(!isUuid(id))throw new Error('Utente non valido.');validateNewPassword(p,c);await invokeAccessManager({action:'reset_user_password',user_id:id,password:p});$('resetPasswordDialog').close();note('Password utente aggiornata.')}catch(e){note(e.message,true)}};
 $('createSessionBtn').onclick=async()=>{try{if(!requirePermission('sessions_manage','Preparazione corsi non abilitata per questo ruolo.'))return;if(profile?.role==='super_admin'&&!validateQuestionAvailability($('sessionDiscipline').value,$('sessionQuestions').value))return;const studentIds=[...document.querySelectorAll('#courseStudentList input[type=checkbox]:checked')].map(x=>x.value).filter(isUuid);if(!studentIds.length)throw new Error('Seleziona almeno un Corsista da inserire nel corso.');if(!$('sessionTitle').value.trim()||!$('commonUsername').value.trim())generateSessionIdentity(true);$('createSessionBtn').disabled=true;const d=await invokeAccessManager({action:'create_course_with_students',title:$('sessionTitle').value.trim(),common_username:$('commonUsername').value.trim(),discipline:$('sessionDiscipline').value,question_count:+$('sessionQuestions').value,duration_minutes:+$('sessionDuration').value,pass_percentage:+$('sessionPass').value,notes:$('sessionNotes').value.trim()||null,student_ids:studentIds});lastSessionCreatedId=d.session?.id||null;note(`Corso preparato: ${d.assigned_count||studentIds.length} Corsisti inseriti e prove assegnate.`);$('sessionNotes').value='';generateSessionIdentity(true);await refreshAll(true)}catch(e){note(e.message,true)}finally{$('createSessionBtn').disabled=false}};
 
@@ -473,11 +473,11 @@ function renderCandidateCredentialDelivery(c){
   box.innerHTML=`
     <div class="credential-delivery">
       <h3>Credenziali pronte</h3>
-      <p><b>${c.full_name}</b> può riceverle direttamente dal telefono.</p>
+      <p><b>${k9EscapeHtml(c.full_name)}</b> può riceverle direttamente dal telefono.</p>
       <div class="credential-data">
-        <div class="credential-row"><span>Username</span><b>${c.username}</b></div>
-        <div class="credential-row"><span>Password</span><b>${c.password}</b></div>
-        <div class="credential-row"><span>Link accesso</span><b style="font-size:12px">${c.access_url||candidateAccessUrl()}</b></div>
+        <div class="credential-row"><span>Username</span><b>${k9EscapeHtml(c.username)}</b></div>
+        <div class="credential-row"><span>Password</span><b>${k9EscapeHtml(c.password)}</b></div>
+        <div class="credential-row"><span>Link accesso</span><b style="font-size:12px">${k9EscapeHtml(c.access_url||candidateAccessUrl())}</b></div>
       </div>
       <div class="credential-actions">
         <button type="button" class="btn primary" id="shareCandidateCredentialsBtn">Invia</button>
@@ -493,6 +493,7 @@ function renderCandidateCredentialDelivery(c){
   $('copyCandidateCredentialsBtn').onclick=copyCandidateCredentials;
 }
 
+$('toggleCandidatePassword').onclick=()=>{const x=$('newCandidatePassword');const showing=x.type==='text';x.type=showing?'password':'text';$('toggleCandidatePassword').textContent=showing?'Mostra password':'Nascondi password'};
 $('createCandidateBtn').onclick=async()=>{try{if(!requirePermission('candidates_create','Creazione corsisti non abilitata per questo ruolo.'))return;
  const name=$('candidateName').value.trim(),fiscalCode=$('candidateFiscalCode').value.trim().toUpperCase(),birthDate=$('candidateBirthDate').value,birthPlace=$('candidateBirthPlace').value.trim(),code=$('candidateCode').value.trim().toLowerCase(),p=$('newCandidatePassword').value;
  const fiscalOk=/^[A-Z0-9]{16}$/.test(fiscalCode);

@@ -872,7 +872,7 @@ $('loginBtn').onclick=async()=>{
  }
 };$('logoutBtn').onclick=logoutSafely;
 
-const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.0',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
+const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.2',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
 function bool(v){return v===true||v==='true'}
 
 let brandingObjectUrls={logo:'',icon:''},dynamicManifestUrl='',officialLogoBlobUrl='';
@@ -1300,9 +1300,9 @@ async function boot(){
    $('staffPanel').classList.remove('hidden');
    $('adminPanel').classList.remove('hidden');
    document.querySelectorAll('#adminPanel .super-only').forEach(el=>el.classList.toggle('hidden',data.role!=='super_admin'));
-   const superOption=$('newStaffRole')?.querySelector('[data-super-option="1"]');
-   if(superOption)superOption.hidden=data.role!=='super_admin';
-   if(data.role!=='super_admin'&&$('newStaffRole')?.value==='super_admin')$('newStaffRole').value='teacher';
+   const staffSelect=$('newStaffRole');
+   [...(staffSelect?.options||[])].forEach(o=>{if(['super_admin','vice_admin'].includes(o.value))o.hidden=data.role!=='super_admin'});
+   if(data.role!=='super_admin'&&['super_admin','vice_admin'].includes(staffSelect?.value))staffSelect.value='teacher';
 
    const jobs=[];
    if(can('students_view')||can('assign_exam'))jobs.push(loadStudents());

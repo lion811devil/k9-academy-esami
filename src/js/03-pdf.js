@@ -319,7 +319,7 @@ async function verifyDocumentCode(){
 }
 
 function certificateEligible(x){
- return x?.passed===true && x?.practical_outcome==='idoneo' && !!x?.practical_completed_at && mantrailingComponentsComplete(x);
+ return x?.passed===true && x?.practical_outcome==='idoneo' && !!x?.practical_completed_at && x?.practical_score!=null && x?.professional_score!=null && mantrailingComponentsComplete(x);
 }
 function selectedDocumentExam(){
  const id=$('documentExamSelect')?.value;
