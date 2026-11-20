@@ -1321,3 +1321,99 @@ body.role-vice_admin #roleVisualIdentity{font-weight:800}
  #pageNextBtn{display:block!important;grid-column:2!important;grid-row:2!important;width:100%!important;min-width:0!important;min-height:48px!important;height:auto!important;padding:8px 10px!important}
  #pagePrevBtn[hidden],#pageNextBtn[hidden]{display:none!important}
 }
+
+/* K9 2.2.1 — Correzione mobile della banca domande (senza alterare esami e database).
+   Su desktop rimane la tabella; sul telefono ogni riga diventa una scheda leggibile. */
+.qb-select-page{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.qb-select-page input,.qb-table .qb-check{width:18px;height:18px;min-width:18px;max-width:18px;margin:0;accent-color:var(--role-accent,var(--p));cursor:pointer}
+.qb-select-caption{display:none}
+.qb-toolbar-details{position:relative;flex:0 1 auto;min-width:180px;color:inherit}
+.qb-toolbar-details>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:center;min-height:42px;padding:10px 14px;border:1px solid var(--line);border-radius:11px;background:var(--card);font-weight:800;user-select:none}
+.qb-toolbar-details>summary::-webkit-details-marker{display:none}
+.qb-toolbar-details>summary::after{content:'⌄';margin-left:9px;font-size:18px;line-height:1}
+.qb-toolbar-details[open]>summary::after{content:'⌃'}
+.qb-toolbar-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.qb-toolbar-options>.btn,.qb-toolbar-options>.qb-import-label{width:100%;min-width:0;min-height:42px;display:flex;align-items:center;justify-content:center;text-align:center;white-space:normal;line-height:1.3}
+.qb-toolbar-options #qbDeleteSelected{color:#991b1b}
+.qb-toolbar-options #qbDeleteSelected:focus-visible,.qb-toolbar-details>summary:focus-visible{outline:3px solid var(--role-accent,var(--p));outline-offset:2px}
+
+@media(max-width:720px){
+  /* Comandi e filtri più compatti, senza rimuovere funzionalità. */
+  #bankAdminCard{padding:12px 10px;margin-inline:0;min-width:0}
+  #bankAdminCard>h2{font-size:24px;margin:2px 0 6px}
+  #bankAdminCard>.block-hint{font-size:13px;line-height:1.4;margin:6px 0 12px}
+  #bankStats{gap:8px!important;margin-bottom:10px}
+  #bankStats .qb-stat-action{min-height:72px;padding:9px 10px;border-radius:12px}
+  #bankStats .qb-stat-action b{font-size:23px;margin-top:3px}
+  #bankStats .qb-stat-action small{font-size:11px;line-height:1.25}
+  #bankAdminCard>.grid:not(#bankStats){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  #bankAdminCard>.grid:not(#bankStats)>label{min-width:0;font-size:13px;font-weight:700}
+  #bankAdminCard>.grid:not(#bankStats)>label:first-child{grid-column:1/-1}
+  #bankAdminCard>.grid:not(#bankStats) input,
+  #bankAdminCard>.grid:not(#bankStats) select{min-width:0;min-height:44px;padding:8px 9px;font-size:14px}
+  #qbDisciplineSummary{font-size:12px;line-height:1.5}
+  .qb-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:9px!important;align-items:start}
+  .qb-toolbar>.btn{width:100%;min-width:0;min-height:44px;padding:9px 7px;font-size:13px}
+  .qb-toolbar-details{grid-column:1/-1;width:100%;min-width:0}
+  .qb-toolbar-details>summary{width:100%;min-height:42px;font-size:13px}
+  .qb-toolbar-options{grid-template-columns:repeat(2,minmax(0,1fr));padding:8px;gap:7px}
+  .qb-toolbar-options>.btn,.qb-toolbar-options>.qb-import-label{font-size:12px!important;padding:9px 6px!important;min-height:44px}
+  #qbSelectionInfo{margin:8px 0;font-size:12px}
+  #bankAdminCard>.bar:not(.qb-toolbar){display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:9px}
+  #bankAdminCard>.bar:not(.qb-toolbar) #qbPageLabel{grid-column:1/-1;grid-row:1;text-align:center;font-size:12px}
+  #bankAdminCard>.bar:not(.qb-toolbar) #qbPrev,
+  #bankAdminCard>.bar:not(.qb-toolbar) #qbNext{min-height:42px;font-size:13px;padding:9px 6px}
+  #bankAdminCard>.bar:not(.qb-toolbar)+p.status{font-size:12px;line-height:1.45;margin:7px 0}
+
+  /* Il layout originale era forzato a 1180px anche con display da 360px. */
+  .qb-table-wrap{overflow:visible!important;width:100%;min-width:0}
+  .qb-table{display:block;width:100%;min-width:0!important;max-width:100%;table-layout:auto;border-collapse:separate}
+  .qb-table thead,.qb-table thead tr{display:block}
+  .qb-table thead th{display:none}
+  .qb-table thead th:first-child{display:block;border:0;padding:4px 4px 10px}
+  .qb-select-caption{display:inline;font-size:13px;font-weight:700}
+  .qb-table tbody{display:grid;gap:12px;min-width:0}
+  .qb-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:
+    'code select'
+    'discipline discipline'
+    'question question'
+    'answer answer'
+    'explanation explanation'
+    'category category'
+    'level status'
+    'actions actions';
+    column-gap:12px;row-gap:8px;min-width:0;max-width:100%;padding:12px;border:1px solid var(--line);border-radius:15px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.035)}
+  .qb-table tbody tr:has(td[colspan]){display:block}
+  .qb-table tbody td{display:block;width:auto;min-width:0!important;max-width:100%!important;border:0;padding:0;margin:0;overflow-wrap:anywhere;word-break:normal;font-size:14px;line-height:1.4}
+  .qb-table tbody td::before{content:attr(data-label);display:block;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.01em;margin-bottom:3px}
+  .qb-table tbody td:nth-child(1){grid-area:select;align-self:center;justify-self:end}
+  .qb-table tbody td:nth-child(1)::before{display:none}
+  .qb-table tbody td:nth-child(2){grid-area:code;font-weight:900;font-size:15px;color:var(--role-accent,var(--p));align-self:center}
+  .qb-table tbody td:nth-child(2)::before{display:none}
+  .qb-table tbody td:nth-child(3){grid-area:discipline;font-size:12px;color:var(--muted);margin-top:-7px}
+  .qb-table tbody td:nth-child(3)::before{display:none}
+  .qb-table tbody td:nth-child(4){grid-area:question;font-size:16px;font-weight:750;line-height:1.45;border-top:1px solid var(--line);padding-top:10px}
+  .qb-table tbody td:nth-child(5){grid-area:answer;border-top:1px solid var(--line);padding-top:9px}
+  .qb-table tbody td:nth-child(6){grid-area:explanation;border-top:1px solid var(--line);padding-top:9px}
+  .qb-table tbody td:nth-child(7){grid-area:category;font-size:12px;color:var(--muted)}
+  .qb-table tbody td:nth-child(8){grid-area:level;font-size:13px;align-self:start}
+  .qb-table tbody td:nth-child(9){grid-area:status;justify-self:end;text-align:right;font-size:12px}
+  .qb-table tbody td:nth-child(9) small{display:block;max-width:150px;line-height:1.3;margin-top:3px;overflow-wrap:anywhere}
+  .qb-table tbody td:nth-child(10){grid-area:actions;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+  .qb-table tbody td:nth-child(10)::before{flex:0 0 100%;margin:0}
+  .qb-table tbody td:nth-child(10) .btn{flex:1 1 calc(50% - 4px);width:auto!important;min-width:0;min-height:42px;padding:9px 6px;font-size:13px;white-space:normal;line-height:1.2}
+  .qb-table tbody td[colspan]{grid-column:1/-1}
+  .qb-table tbody td[colspan]::before{display:none}
+  .qb-table .qb-answer-cell,.qb-table .qb-explanation-cell{min-width:0;max-width:100%}
+  .qb-table .qb-correct-letter{vertical-align:middle;float:left;margin:1px 8px 3px 0}
+  .qb-table .qb-expand-text{max-height:4.4em;line-height:1.45em;min-width:0}
+  .qb-table .qb-expand-text.expanded{max-height:none}
+  .qb-table .qb-text-toggle{font-size:12px;min-height:28px;padding:5px 0;display:inline-block}
+  /* Consente di raggiungere l'ultima scheda sotto la barra Home/Esame/Corsista/Menu. */
+  body.staff-navigation-active #adminPanel{padding-bottom:calc(120px + env(safe-area-inset-bottom))!important}
+}
+@media(max-width:380px){
+  #bankAdminCard{padding:10px 8px}
+  .qb-table tbody tr{padding:10px;gap:7px 9px}
+  .qb-table tbody td:nth-child(4){font-size:15px}
+}
