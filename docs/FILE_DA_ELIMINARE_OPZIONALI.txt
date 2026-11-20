@@ -1,0 +1,26 @@
+Solo dopo backup repository e collaudo. Questi 17 file sono copie byte-per-byte delle migrazioni storiche: eliminabili dalla radice supabase/, NON da supabase/migrations/. Non eseguire nessuno di essi.
+
+supabase/aggiornamento_1_26_motore_esame.sql
+supabase/aggiornamento_1_31_esito_pratica_manuale.sql
+supabase/aggiornamento_1_33_componenti_progressive.sql
+supabase/aggiornamento_1_44_registro_documenti.sql
+supabase/aggiornamento_1_45_associazione_documenti.sql
+supabase/aggiornamento_1_48_archivio_rpc.sql
+supabase/aggiornamento_1_51_ruoli_permessi.sql
+supabase/aggiornamento_1_52_fix_ruoli_permessi.sql
+supabase/aggiornamento_1_55_controlli_ruoli.sql
+supabase/aggiornamento_1_61_archiviazione_eliminazione_utenti.sql
+supabase/aggiornamento_1_61_archiviazione_sessioni.sql
+supabase/aggiornamento_1_61_audit_integrita.sql
+supabase/aggiornamento_1_61_foto_profilo.sql
+supabase/aggiornamento_1_62_hrdd_300_definitive.sql
+supabase/aggiornamento_1_63_report_completo_corsista.sql
+supabase/aggiornamento_1_66_consolidamento.sql
+supabase/aggiornamento_1_70_1_fix_anagrafica_corsista.sql
+
+Spostare fuori dalla repository operativa (archivio locale, non cancellare senza backup): supabase/reset_installazione_parziale.sql.
+Non eliminare schema.sql o altri script storici unici: non usare per aggiornare il database attivo.
+
+SE MAI CARICATI IN PRECEDENZA:
+assets/js/qr-vendor.js
+licenses/QRCode.txt

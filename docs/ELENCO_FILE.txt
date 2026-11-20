@@ -1,0 +1,31 @@
+PACCHETTO CUMULATIVO K9 ACADEMY ESAMI 2.2.1 — versione corretta di 2.2.0
+Sostituisce 2.0.1, 2.1.0 e 2.2.0 (mai installate).
+
+DA SOSTITUIRE:
+- index.html
+- README.md
+- service-worker.js
+- supabase/functions/manage-exam-access/index.ts
+
+DA AGGIUNGERE:
+- assets/css/app.css
+- assets/js/app.js
+- src/js/01-core.js
+- src/js/02-exam.js
+- src/js/03-pdf.js
+- src/js/04-management.js
+- src/js/05-question-bank.js
+- src/js/06-users-events.js
+- supabase/migrations/20261120093000_k9_v2_2_1.sql
+- supabase/verification/preflight_2_2_1.sql
+- supabase/verification/verify_2_2_1.sql
+- docs/DETECTION_AUDIT_E_CORREZIONE.md
+- docs/DETECTION_REVISIONE_100_DOMANDE.csv
+- docs/INSTALLAZIONE_PASSO_PASSO.md
+- docs/ELENCO_FILE.txt
+- docs/FILE_DA_ELIMINARE_OPZIONALI.txt
+- tests/check_frontend.py
+- tools/build_frontend.py
+
+ATTENZIONE: 50 Detection nominalmente difficili sono formulazioni degli stessi 10 concetti.
+Le fonti didattiche non sono presenti per verificarne la complessità.
