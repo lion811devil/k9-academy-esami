@@ -1417,3 +1417,28 @@ body.role-vice_admin #roleVisualIdentity{font-weight:800}
   .qb-table tbody tr{padding:10px;gap:7px 9px}
   .qb-table tbody td:nth-child(4){font-size:15px}
 }
+
+/* K9 consolidato: accessibilita delle azioni e editor banca su smartphone. */
+.qb-text-toggle[hidden]{display:none!important}
+#qbEditor{scroll-margin-top:120px}
+@media(max-width:720px){
+ #qbEditor{padding:14px 10px;scroll-margin-top:125px}
+ #qbEditor>.grid{grid-template-columns:1fr!important}
+ #qbEditor .bar{gap:8px}
+ #qbEditor .bar>.btn{min-height:44px}
+ #bankAdminCard .qb-table tbody td:nth-child(10) .btn{position:relative;z-index:1;touch-action:manipulation}
+ body.staff-navigation-active #adminPanel{padding-bottom:calc(140px + env(safe-area-inset-bottom))!important}
+}
+
+/* Archivio esami: schede leggibili su smartphone, tabella classica su desktop. */
+@media(max-width:720px){
+ .archive-table{display:block;width:100%;min-width:0}
+ .archive-table thead{display:none}
+ .archive-table tbody{display:grid;gap:10px}
+ .archive-table tbody tr{display:grid;grid-template-columns:1fr;gap:6px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card)}
+ .archive-table tbody td{display:flex;justify-content:space-between;gap:10px;text-align:right;border:0;padding:5px 0;overflow-wrap:anywhere;min-width:0}
+ .archive-table tbody td::before{content:attr(data-label);font-size:12px;font-weight:750;color:var(--muted);text-align:left;flex:0 0 38%}
+ .archive-table tbody td[colspan]{display:block;text-align:center}
+ .archive-table tbody td[colspan]::before{display:none}
+ .archive-table tbody td .btn{width:auto;min-height:42px}
+}
