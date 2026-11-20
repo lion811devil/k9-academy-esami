@@ -1,26 +1,25 @@
-# AVVISO DETECTION — NON INSTALLARE 2.2.0
-Le 100 domande medie/difficili Detection del CSV rappresentano 10 concetti: le prove con oltre 10 domande Detection vengono respinte per evitare ripetizioni concettuali. Le 50 etichette difficile NON corrispondono a una difficoltà didattica più alta verificata. Nessuna modifica automatica alle domande o alle impostazioni esistenti.
+# K9 Academy Esami 2.2.2 — installazione unica correttiva
 
-# K9 Academy Esami 2.2.1 — installazione passo per passo
+**Questa patch si applica alla repository `k9-academy-esami-main (1).zip` caricata il 20 novembre 2026.** Non applicarla a versioni precedenti senza confronto.
 
-**Questa versione è cumulativa:** parte dall’originale di novembre, senza richiedere la 2.0.1 o 2.1.0. Non installare le precedenti due patch.
+## Da fare
 
-## Ordine obbligatorio
+1. Non eseguire SQL: il database è già aggiornato alla 2.2.1. Il file `docs/sql-applied/20261120_2_2_1_GIA_APPLICATO_NON_RIESEGUIRE.sql` è **solo una copia storica** dell'aggiornamento già applicato: non eseguirlo e non spostarlo in `supabase/migrations`.
+2. Carica i file della ZIP nelle stesse posizioni della repository. Non caricare il file ZIP dentro la repository: estrai i singoli file. Sono inclusi solo quelli modificati/aggiunti. **Non cancellare gli altri file.**
+3. Importante: sostituisci `supabase/functions/manage-exam-access/index.ts` e pubblica nuovamente la funzione **manage-exam-access** su Supabase. Il commit GitHub può attivare il workflow, ma devi verificarne l'esito in GitHub Actions e verificare su Supabase la data del nuovo deploy. Se il workflow non è configurato, pubblica manualmente il codice nella scheda Edge Functions > Code > Deploy updates. Non creare un'altra funzione.
+4. Carica i sei moduli JS modificati (`src/js/`) insieme al bundle `assets/js/app.js`. Non è necessario caricare nuovamente il modulo `src/js/02-exam.js`, che non è cambiato.
+5. Sostituisci `assets/css/app.css` e infine `service-worker.js` e `index.html`. Il service worker ha una nuova versione di cache. Prova l'applicazione in incognito per evitare file vecchi.
+6. Controlla GitHub Actions > `Check K9 frontend`. Su Codespaces, in alternativa, usa `python tests/check_frontend.py` per i test statici.
+7. Esegui un collaudo con account di prova: apertura editor domanda, salvataggio di una domanda facile senza riclassificarla, duplicato oltre la prima pagina, creazione utente con ruoli diversi, archiviazione/ripristino, esame, 3 correzioni, PDF, archivio e navigazione smartphone.
+8. Non eliminare ancora dati o migrazioni SQL. I 17 duplicati eliminabili dalla root di `supabase` sono elencati in `docs/FILE_DA_ELIMINARE_OPZIONALI.txt`, già presente nella repository. Eliminali solo dopo il collaudo.
 
-1. Fermare gli esami. Sono stati verificati 0 esami in corso nel controllo del 19 novembre, ma ripetere il controllo prima del RUN.
-2. In Supabase SQL Editor eseguire `supabase/verification/preflight_2_2_1.sql` e salvare la distribuzione per difficoltà e le impronte. I conteggi comunicati precedentemente erano: Detection 150, Dogsitter 750 (600 attive), HRDD 300, Mantrailing 1702. **Questi valori vanno ricontrollati.**
-3. **Raccomandato:** esportare almeno la tabella `question_bank` (e, preferibilmente, un backup PostgreSQL completo). Hai scelto di non effettuare il backup, quindi un errore di installazione potrebbe richiedere un intervento manuale.
-4. Aprire una nuova query, incollare SOLO il contenuto di `supabase/migrations/20261120093000_k9_v2_2_1.sql` ed eseguire una sola volta. La migrazione è transazionale. Se appare un errore, fermarsi e condividere il messaggio; non ripetere automaticamente il RUN.
-5. Eseguire `supabase/verification/verify_2_2_1.sql`. Confrontare le impronte delle domande e i conteggi prima/dopo: non devono cambiare. Verificare numero domande MEDIE e DIFFICILI per disciplina.
-6. Caricare i file nei rispettivi percorsi GitHub (solo quelli elencati in `docs/ELENCO_FILE.txt`). Il workflow deve distribuire la Edge Function `manage-exam-access`; verificare GitHub Actions e il log del deploy. Non caricare `schema.sql`, le vecchie migrazioni, la 2.0.1 o la 2.1.0.
-7. Ricaricare l’app e svuotare la cache, se necessario. Verificare i cinque ruoli, il login dei due corsisti, i tre esami esistenti, creazione corso, prova e timer, spiegazioni, correzioni, PDF senza QR Code.
-8. Controllare un esame per ciascuna disciplina e verificare che il report mostri soltanto domande classificate media/difficile, senza famiglie ripetute nello stesso esame.
-9. Soltanto dopo il collaudo, valutare l’eliminazione delle copie SQL duplicate facoltative e di qualsiasi vecchio `assets/js/qr-vendor.js` o `licenses/QRCode.txt` se caricati.
+## File coinvolti
 
-## Difficoltà
+Vedi `docs/ELENCO_FILE.txt` per la lista completa con i percorsi. Nella patch tutti i file sono collocati nella loro cartella definitiva, quindi non devi rinominarli.
 
-La versione 2.2.1 esclude i quesiti **facili** dalle nuove prove. Il motore tenta una miscela di circa 40% **difficile** e 60% **medio**, solo se sufficientemente presenti e distinti; in caso contrario completa con l’altro livello. **Non inventa quesiti né assegna la difficoltà in automatico.** Per ottenere esami realmente difficili occorre revisionare e classificare le domande/alternative già presenti, confrontandole con le dispense.
+## Limiti
 
-## Limiti verificati
-
-Nessuna operazione è stata eseguita sul Supabase attivo o sul GitHub reale. Il pacchetto è stato sottoposto a controlli statici locali; l’esecuzione SQL effettiva e il collaudo completo richiedono il progetto collegato.
+- I test sono locali e con dati simulati. Non dimostrano il funzionamento end-to-end sul database live.
+- La compensazione fra Supabase Auth e PostgreSQL non è un'unica transazione: gli errori di rollback vengono segnalati esplicitamente, ma serve un collaudo reale.
+- Il controllo sul PDF garantisce che una prova pratica idonea abbia punteggi registrati, ma **non introduce una nuova soglia di professionalità**, che deve essere formalizzata nel regolamento del corso e, se vincolante, applicata anche alla RPC di emissione.
+- Le banche domande non vengono modificate; serve ancora revisione didattica sulle dispense originali per certificare la qualità medio/difficile.
