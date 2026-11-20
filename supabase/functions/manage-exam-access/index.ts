@@ -1,4 +1,4 @@
-// K9 Academy Esami — Release 2.2.0 — accesso personale e transazioni database
+// K9 Academy Esami — Release 2.2.2 — accesso personale e transazioni database
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -68,10 +68,7 @@ Deno.serve(async (request) => {
 
       // Limite lato server per i tentativi sullo stesso username e origine.
       // Il valore conservato nel DB e solo un hash, non la password o l'IP.
-      const sourceIp = (request.headers.get('cf-connecting-ip')
-        || request.headers.get('x-real-ip')
-        || request.headers.get('x-forwarded-for')?.split(',')[0]
-        || 'unknown').trim().slice(0, 100);
+      const sourceIp = (request.headers.get('cf-connecting-ip') || 'gateway-unavailable').trim().slice(0,100);
       const attemptKey = await sha256Hex(`k9-login\n${username}\n${sourceIp}`);
       const { data: allowed, error: limitError } = await admin.rpc('k9_candidate_login_gate', {
         p_key_hash: attemptKey, p_success: false,
@@ -245,13 +242,13 @@ Deno.serve(async (request) => {
       const email = String(body.email || "").trim().toLowerCase();
       const password = String(body.password || "");
       const requestedRole = String(body.role || "");
-      const allowedForStaff = ["student", "teacher", "examiner", "vice_admin"];
+      const allowedForStaff = ["student", "teacher", "examiner"];
       const allowedForSuper = [...allowedForStaff, "super_admin"];
       const allowed = isSuper ? allowedForSuper : allowedForStaff;
       if (!fullName) throw new Error("Inserisci nome e cognome.");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Email non valida.");
       if (password.length < 8) throw new Error("La password deve contenere almeno 8 caratteri.");
-      if (!allowed.includes(requestedRole)) throw new Error(isSuper ? "Ruolo non valido." : "Solo il Super Amministratore può creare Super Amministratori.");
+      if (!allowed.includes(requestedRole)) throw new Error(isSuper ? "Ruolo non valido." : "Solo il Super Amministratore può creare Super o Vice Amministratori.");
       const { data: created, error: createError } = await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:fullName}});
       if (createError || !created.user) throw createError || new Error("Creazione account non riuscita.");
       const { error: profileUpsertError } = await admin.from("profiles").upsert({id:created.user.id,email,full_name:fullName,role:requestedRole,updated_at:new Date().toISOString()});
@@ -296,36 +293,76 @@ Deno.serve(async (request) => {
       if (!target) throw new Error("Utente non trovato.");
       if (target.role === "super_admin") throw new Error("Un Super Amministratore non può essere archiviato o eliminato da questa funzione.");
 
+      // Supabase Auth e Postgres non condividono una transazione. Conserviamo gli stati
+      // precedenti e tentiamo il ripristino in caso di errore in un passaggio intermedio.
+      const { data: originalCandidates, error: candidateReadError } = target.role === "student"
+        ? await admin.from("session_candidates").select("id,active").eq("auth_user_id", userId)
+        : { data: [], error: null };
+      if (candidateReadError) throw candidateReadError;
+      const { data: originalCredential, error: credentialReadError } = target.role === "student"
+        ? await admin.from("student_credentials").select("student_id,active").eq("student_id", userId).maybeSingle()
+        : { data: null, error: null };
+      if (credentialReadError) throw credentialReadError;
+      const restoreDatabaseStates = async () => {
+        const failures: string[] = [];
+        const { error: profileRollbackError } = await admin.from("profiles")
+          .update({ archived_at: target.archived_at, updated_at: new Date().toISOString() }).eq("id", userId);
+        if (profileRollbackError) failures.push(`profilo: ${errorMessage(profileRollbackError)}`);
+        for (const candidate of (originalCandidates || [])) {
+          const { error } = await admin.from("session_candidates").update({ active: candidate.active }).eq("id", candidate.id);
+          if (error) failures.push(`iscrizione ${candidate.id}: ${errorMessage(error)}`);
+        }
+        if (originalCredential) {
+          const { error } = await admin.from("student_credentials")
+            .update({ active: originalCredential.active }).eq("student_id", userId);
+          if (error) failures.push(`credenziali: ${errorMessage(error)}`);
+        }
+        return failures;
+      };
+
       if (action === "archive_user") {
         if (target.archived_at) return json({ success: true, already_archived: true });
         const archivedAt = new Date().toISOString();
-        const { error: updateError } = await admin.from("profiles").update({ archived_at: archivedAt, updated_at: archivedAt }).eq("id", userId);
-        if (updateError) throw updateError;
-        if (target.role === "student") {
-          const { error: candidateError } = await admin.from("session_candidates").update({ active: false }).eq("auth_user_id", userId);
-          if (candidateError) throw candidateError;
+        try {
+          const { error: updateError } = await admin.from("profiles").update({ archived_at: archivedAt, updated_at: archivedAt }).eq("id", userId);
+          if (updateError) throw updateError;
+          if (target.role === "student") {
+            const { error: candidateError } = await admin.from("session_candidates").update({ active: false }).eq("auth_user_id", userId);
+            if (candidateError) throw candidateError;
+            const { error: credentialError } = await admin.from("student_credentials").update({ active: false }).eq("student_id", userId);
+            if (credentialError) throw credentialError;
+          }
+          const { error: authUpdateError } = await admin.auth.admin.updateUserById(userId, { ban_duration: "876000h" });
+          if (authUpdateError) throw authUpdateError;
+          return json({ success: true, archived: true });
+        } catch (error) {
+          const rollbackFailures = await restoreDatabaseStates();
+          if (rollbackFailures.length) throw new Error(`Archiviazione non completata; ripristino parziale (${rollbackFailures.join('; ')}). Controlla l'account manualmente.`);
+          throw error;
         }
-        const { error: authUpdateError } = await admin.auth.admin.updateUserById(userId, { ban_duration: "876000h" });
-        if (authUpdateError) {
-          await admin.from("profiles").update({ archived_at: null, updated_at: new Date().toISOString() }).eq("id", userId);
-          throw authUpdateError;
-        }
-        return json({ success: true, archived: true });
       }
 
       if (action === "restore_user") {
-        const { error: authUpdateError } = await admin.auth.admin.updateUserById(userId, { ban_duration: "none" });
-        if (authUpdateError) throw authUpdateError;
+        if (!target.archived_at) return json({success:true,already_active:true});
         const now = new Date().toISOString();
-        const { error: updateError } = await admin.from("profiles").update({ archived_at: null, updated_at: now }).eq("id", userId);
-        if (updateError) throw updateError;
-        if (target.role === "student") {
-          const {error:credentialError}=await admin.from("student_credentials").update({active:true}).eq("student_id",userId);
-          if(credentialError)throw credentialError;
-          const { error: candidateError } = await admin.from("session_candidates").update({ active: true }).eq("auth_user_id", userId);
-          if (candidateError) throw candidateError;
+        try {
+          const { error: updateError } = await admin.from("profiles").update({ archived_at: null, updated_at: now }).eq("id", userId);
+          if (updateError) throw updateError;
+          if (target.role === "student") {
+            const { error: credentialError } = await admin.from("student_credentials").update({ active: true }).eq("student_id", userId);
+            if (credentialError) throw credentialError;
+            const { error: candidateError } = await admin.from("session_candidates").update({ active: true }).eq("auth_user_id", userId);
+            if (candidateError) throw candidateError;
+          }
+          // Sblocchiamo Auth solo dopo il completamento degli aggiornamenti SQL.
+          const { error: authUpdateError } = await admin.auth.admin.updateUserById(userId, { ban_duration: "none" });
+          if (authUpdateError) throw authUpdateError;
+          return json({ success: true, restored: true });
+        } catch (error) {
+          const rollbackFailures = await restoreDatabaseStates();
+          if (rollbackFailures.length) throw new Error(`Ripristino non completato; rollback parziale (${rollbackFailures.join('; ')}). Controlla l'account manualmente.`);
+          throw error;
         }
-        return json({ success: true, restored: true });
       }
 
       const dependencyChecks = [
