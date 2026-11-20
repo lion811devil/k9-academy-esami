@@ -127,16 +127,16 @@ function renderQuestionBank(){
    const letter=qbCorrectLetter(x);
    const explanation=x.explanation||'Nessuna spiegazione inserita.';
    return `<tr>
-     <td><input type="checkbox" class="qb-check" value="${x.id}" onchange="qbUpdateSelection()"></td>
-     <td>${qbEscape(x.code)}</td>
-     <td>${qbEscape(labels[x.discipline]||x.discipline)}</td>
-     <td>${qbEscape(x.question_text)}</td>
-     <td class="qb-answer-cell"><span class="qb-correct-letter">${letter}</span><span class="qb-expand-text">${qbEscape(answer)}</span><button type="button" class="qb-text-toggle" onclick="qbToggleText(this)">Mostra tutto</button></td>
-     <td class="qb-explanation-cell"><span class="qb-expand-text">${qbEscape(explanation)}</span><button type="button" class="qb-text-toggle" onclick="qbToggleText(this)">Mostra tutto</button></td>
-     <td>${qbEscape(x.category)}</td>
-     <td><strong>${x.difficulty==='difficile'?'Difficile':x.difficulty==='medio'?'Media':'Facile · esclusa'}</strong></td>
-     <td><span class="qb-status ${x.active?'on':'off'}">${x.active?'Attiva':'Disattivata'}</span><br><small>${qbEscape(x.validation_status||'da_verificare')} · v${Number(x.k9_version||1)} · var. ${Number(x.variant_number||1)}</small></td>
-     <td><button class="btn ghost" onclick="qbEdit('${x.id}')">Modifica</button> <button class="btn ghost" onclick="qbDuplicate('${x.id}')">Crea variante</button></td>
+     <td data-label="Selezione"><input type="checkbox" class="qb-check" value="${x.id}" aria-label="Seleziona ${qbEscape(x.code)}" onchange="qbUpdateSelection()"></td>
+     <td data-label="Codice">${qbEscape(x.code)}</td>
+     <td data-label="Disciplina">${qbEscape(labels[x.discipline]||x.discipline)}</td>
+     <td data-label="Domanda">${qbEscape(x.question_text)}</td>
+     <td data-label="Risposta corretta" class="qb-answer-cell"><span class="qb-correct-letter">${letter}</span><span class="qb-expand-text">${qbEscape(answer)}</span><button type="button" class="qb-text-toggle" onclick="qbToggleText(this)">Mostra tutto</button></td>
+     <td data-label="Spiegazione" class="qb-explanation-cell"><span class="qb-expand-text">${qbEscape(explanation)}</span><button type="button" class="qb-text-toggle" onclick="qbToggleText(this)">Mostra tutto</button></td>
+     <td data-label="Categoria">${qbEscape(x.category)}</td>
+     <td data-label="Livello"><strong>${x.difficulty==='difficile'?'Difficile':x.difficulty==='medio'?'Media':'Facile · esclusa'}</strong></td>
+     <td data-label="Stato"><span class="qb-status ${x.active?'on':'off'}">${x.active?'Attiva':'Disattivata'}</span><br><small>${qbEscape(x.validation_status||'da_verificare')} · v${Number(x.k9_version||1)} · var. ${Number(x.variant_number||1)}</small></td>
+     <td data-label="Azioni"><button type="button" class="btn ghost" onclick="qbEdit('${x.id}')">Modifica</button> <button type="button" class="btn ghost" onclick="qbDuplicate('${x.id}')">Crea variante</button></td>
    </tr>`;
  }).join(''):`<tr><td colspan="10"><div class="empty-state">${emptyText}</div></td></tr>`;
  $('qbPageLabel').textContent=qbTotal?`${qbOffset+1}–${qbOffset+rows.length} di ${qbTotal}`:'0 risultati';$('qbPrev').disabled=qbOffset===0;$('qbNext').disabled=qbOffset+rows.length>=qbTotal;$('qbSelectAll').checked=false;
