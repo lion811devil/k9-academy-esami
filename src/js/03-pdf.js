@@ -680,9 +680,15 @@ async function generateCandidateExamReportPdf(x){
    if(strengths.length)overall+=` I risultati migliori riguardano ${joinList(strengths.slice(0,4))}.`;
    if(passedComponents.length)overall+=` Le componenti tecniche ${joinList(passedComponents)} risultano superate.`;
    if(otherComponents.length)overall+=` Restano da considerare le seguenti componenti: ${joinList(otherComponents)}.`;
+   // Il giudizio tecnico registrato e il risultato complessivo vanno descritti distintamente.
+   if(detail.practical_outcome==='idoneo')overall+=' Il giudizio della pratica registrato è IDONEO.';
+   else if(detail.practical_outcome==='non_idoneo')overall+=' Il giudizio della pratica registrato è NON IDONEO; questa decisione non è deducibile dal solo punteggio e la relativa motivazione va verificata nelle osservazioni.';
+   else if(detail.practical_outcome==='da_rivedere')overall+=' Il giudizio della pratica è DA RIVEDERE.';
+   if(detail.passed===false)overall+=` L'ESAME COMPLESSIVO NON È SUPERATO perché la teoria (${Number(detail.score_percentage||0)}%) non raggiunge la soglia richiesta (${Number(detail.pass_percentage||0)}%), indipendentemente dai punteggi pratici.`;
 
    let improve='Non emergono, dai punteggi registrati, aree tecniche specifiche sotto il massimo previsto.';
    if(consolidate.length)improve=`Le priorità di consolidamento riguardano ${joinList(consolidate.slice(0,5))}. Su queste aree è opportuno ricercare maggiore precisione, continuità esecutiva e capacità di mantenere lo standard anche al variare delle condizioni operative.${refine.length?` Gli altri criteri valutati 4/5 risultano positivi e richiedono soprattutto affinamento, non un recupero di base.`:''}`;
+   if(detail.passed===false)improve=`È prioritario consolidare la preparazione teorica: risultato ${Number(detail.score_percentage||0)}% contro soglia ${Number(detail.pass_percentage||0)}%. ${improve}`;
 
    let theory=`La prova teorica si conclude con ${detail.correct_answers||0}/${detail.question_count||0} risposte corrette (${detail.score_percentage||0}%), rispetto a una soglia prevista del ${detail.pass_percentage||0}%.`;
    if(initialErrors>0)theory+=` Sono stati registrati ${initialErrors} ${initialErrors===1?'errore':'errori'} al primo tentativo`;
@@ -697,6 +703,7 @@ async function generateCandidateExamReportPdf(x){
 
    let advice='Si consiglia di mantenere l’allenamento sugli standard già acquisiti e di verificare periodicamente la stabilità della prestazione in condizioni differenti.';
    const adviceParts=[];
+   if(detail.passed===false)adviceParts.push(`riprendere il programma teorico e prepararsi a una nuova prova per raggiungere almeno la soglia del ${Number(detail.pass_percentage||0)}%`);
    if(consolidate.length)adviceParts.push(`dedicare esercitazioni mirate a ${joinList(consolidate.slice(0,3))}`);
    if(initialErrors>0)adviceParts.push('riprendere gli argomenti teorici relativi alle risposte inizialmente errate, verificandone la comprensione e non la sola memorizzazione');
    if(profConsolidate.length)adviceParts.push(`consolidare sul piano professionale ${joinList(profConsolidate.slice(0,2))}`);
@@ -726,7 +733,8 @@ async function generateCandidateExamReportPdf(x){
  await line('Punteggio pratica',detail.practical_score==null?'Non compilato':`${detail.practical_score}/50`);
  await criterionRows(professionalRows,'Valutazione professionalità');
  await line('Punteggio professionalità',detail.professional_score==null?'Non compilato':`${detail.professional_score}/20`);
- await line('Esito pratica',displayedPracticeOutcome({...x,practical_outcome:detail.practical_outcome}));
+ await line('Esito pratica (registrato)',displayedPracticeOutcome({...x,practical_outcome:detail.practical_outcome}));
+ if(detail.passed===false)await line('Motivo esame non superato',`Teoria ${Number(detail.score_percentage||0)}% inferiore alla soglia ${Number(detail.pass_percentage||0)}%`);
  if(components.length){
    await heading('Componenti tecniche');
    for(let i=0;i<components.length;i++)await line(`${i+1}. ${components[i].name}`,componentStatusLabel(components[i].status));

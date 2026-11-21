@@ -123,7 +123,9 @@ function renderQuestionBank(){
  if(summary){
    if(discipline){
      const totalDisc=Number(qbSummary.find(x=>x.discipline===discipline)?.total||0);
-     summary.innerHTML=`<b>${labels[discipline]||discipline}</b> · ${qbTotal} risultati su ${totalDisc} · ${rows.length} in pagina · ${Number(qbSummary.find(x=>x.discipline===discipline)?.medium||0)} medie / ${Number(qbSummary.find(x=>x.discipline===discipline)?.hard||0)} difficili attive`;
+     const counts=qbSummary.find(x=>x.discipline===discipline)||{};
+     const easyNote=counts.easy==null?'':` / ${Number(counts.easy)} facili attive`;
+     summary.innerHTML=`<b>${qbEscape(labels[discipline]||discipline)}</b> · ${qbTotal} risultati su ${totalDisc} · ${rows.length} in pagina · ${Number(counts.medium||0)} medie / ${Number(counts.hard||0)} difficili${easyNote} · priorità medie/difficili`;
    }else{
      summary.textContent=`Tutte le discipline · ${qbTotal} risultati · ${rows.length} in pagina`;
    }
@@ -144,7 +146,7 @@ function renderQuestionBank(){
      <td data-label="Risposta corretta" class="qb-answer-cell"><span class="qb-correct-letter">${letter}</span><span class="qb-expand-text">${qbEscape(answer)}</span><button type="button" class="qb-text-toggle" onclick="qbToggleText(this)">Mostra tutto</button></td>
      <td data-label="Spiegazione" class="qb-explanation-cell"><span class="qb-expand-text">${qbEscape(explanation)}</span><button type="button" class="qb-text-toggle" onclick="qbToggleText(this)">Mostra tutto</button></td>
      <td data-label="Categoria">${qbEscape(x.category)}</td>
-     <td data-label="Livello"><strong>${x.difficulty==='difficile'?'Difficile':x.difficulty==='medio'?'Media':'Facile · esclusa'}</strong></td>
+     <td data-label="Livello"><strong>${x.difficulty==='difficile'?'Difficile':x.difficulty==='medio'?'Media':'Facile · priorità ridotta'}</strong></td>
      <td data-label="Stato"><span class="qb-status ${x.active?'on':'off'}">${x.active?'Attiva':'Disattivata'}</span><br><small>${qbEscape(x.validation_status||'da_verificare')} · v${Number(x.k9_version||1)} · var. ${Number(x.variant_number||1)}</small></td>
      <td data-label="Azioni"><button type="button" class="btn ghost" onclick="qbEdit('${x.id}')">Modifica</button> <button type="button" class="btn ghost" onclick="qbDuplicate('${x.id}')">Crea variante</button></td>
    </tr>`;
@@ -240,7 +242,7 @@ async function qbImportCsv(file){
    else if(!validDisc.includes(r.discipline)||!r.category||!r.question_text||!r.explanation||!options.every(Boolean))reason='campi obbligatori mancanti o disciplina non valida';
    else if(new Set(options.map(qbNorm)).size!==4)reason='alternative duplicate';
    else if(!/^[0-3]$/.test(r.correct_option))reason='risposta corretta: atteso 0, 1, 2 o 3';
-   else if(r.difficulty&&!['medio','difficile'].includes(r.difficulty))reason='livello non valido: usare medio o difficile';
+   else if(r.difficulty&&!['facile','medio','difficile'].includes(r.difficulty))reason='livello non valido: usare facile, medio o difficile';
    else if(r.validation_status&&!['da_verificare','bozza','approvata'].includes(r.validation_status))reason='validazione non valida';
    else if(r.variant_number&&!/^[1-9][0-9]*$/.test(r.variant_number))reason='numero variante non valido';
    else if(r.active&&!['true','false'].includes(r.active.toLowerCase()))reason='stato non valido';
