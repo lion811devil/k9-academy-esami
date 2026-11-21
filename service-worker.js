@@ -1,5 +1,5 @@
 const PREFIX='k9-academy-';
-const CACHE=PREFIX+'v2220-unified-fix-20261120';
+const CACHE=PREFIX+'v2240-pdf-layout-20261121';
 const CORE=['./','./index.html','./manifest.json','./assets/css/app.css','./assets/js/app.js','./icons/app-icon-192.png','./icons/app-icon-512.png'];
 const scope=new URL(self.registration.scope);
 const urls=new Set(CORE.map(path=>new URL(path,scope).href));
