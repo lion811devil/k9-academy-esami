@@ -494,6 +494,8 @@ function finalExamStatus(x){
  const theoryDone=['submitted','expired'].includes(x.status);
  if(!theoryDone)return{code:'waiting',label:'Teoria da completare'};
  if(x.passed===false)return{code:'failed',label:'ESAME NON SUPERATO'};
+ // Un giudizio pratico positivo non puo' trasformare una teoria senza esito in un esame superato.
+ if(x.passed!==true)return{code:'waiting',label:'Esito teorico da verificare'};
  if(x.practical_outcome==='idoneo'){
    if(x.discipline==='mantrailing'&&!mantrailingComponentsComplete(x))return{code:'waiting',label:'Componenti da completare'};
    return{code:'complete',label:'ESAME SUPERATO'};
