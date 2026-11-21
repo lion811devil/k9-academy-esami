@@ -1,3 +1,22 @@
+# K9 Academy Esami — Release 2.2.7 (21 novembre 2026)
+
+## Aggiornamento cumulativo correttivo dalla repository 2.2.6
+
+Questa release **corregge la visualizzazione mobile dei Corsi preparati** senza cambiare dati, ruoli, banca domande o PDF esistenti.
+
+- All'apertura l'app incorpora *Corsi preparati* nella pagina *Corsi*. Ora il contenitore incorporato mantiene l'ID originale e la tabella ha classi CSS stabili: sul telefono diventa un elenco a schede senza colonne verticali di una lettera e senza intestazione residua.
+- Nuova versione della cache PWA e query delle risorse (`v=2270`) per ridurre i conflitti con copie precedenti.
+- Un esame non può risultare **ESAME SUPERATO** quando il campo di esito teorico è ancora indefinito, anche se la pratica è IDONEA. Le valutazioni già archiviate non vengono alterate.
+- Test di regressione e prove con Chromium su schermi mobili/desktop; i test con Supabase reale e il rendering reale dei tre PDF non sono stati eseguiti in questa revisione.
+
+**Installazione:** sostituire soltanto i file inclusi nel pacchetto correttivo 2.2.7 nei rispettivi percorsi GitHub. La presente patch **non richiede nuovo SQL né modifica della Edge Function**. Nel repository esiste lo script storico `supabase/migrations/20261121_k9_225_mix_facili_priorita_medie_difficili.sql`: la sua presenza nel repository non dimostra che sia stato eseguito sul progetto Supabase. Se la nuova selezione delle difficoltà non funziona, verificare lo stato del database prima di considerare l'esecuzione; non ripetere migrazioni già applicate e non eseguire gli script di reset o l'intero storico delle migrazioni.
+
+**Verifiche locali:** `python tools/build_frontend.py` seguito da `python tests/check_frontend.py`. Per un collaudo effettivo eseguire successivamente le prove dei cinque ruoli e della generazione documenti su un ambiente di test collegato a Supabase.
+
+---
+
+## Archivio note della release 2.2.2 (storico, non istruzioni correnti)
+
 # K9 Academy Esami 2.2.2 — aggiornamento correttivo unico
 
 **Prerequisito:** repository K9 Academy Esami 2.2.1 esportata il 20 novembre 2026. Il SQL 2.2.1 risulta già eseguito su Supabase. Questa correzione non richiede nuove migrazioni SQL. Non eseguire `db push`, il vecchio `schema.sql` né script di reset sul database attivo.

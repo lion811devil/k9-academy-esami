@@ -1,4 +1,4 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>K9 Academy — Esami · Release 2.2.6</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>K9 Academy — Esami · Release 2.2.7</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 window.K9_CANDIDATE_BROWSER_MODE=new URLSearchParams(location.search).get('corsista')==='1';
@@ -39,7 +39,7 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
 
 
 
-<link rel="stylesheet" href="./assets/css/app.css?v=2260">
+<link rel="stylesheet" href="./assets/css/app.css?v=2270">
 </head><body>
 <header><div class="wrap"><div class="header-brand">
 <div id="officialLogoBox" class="official-logo-box" aria-label="Logo ufficiale">
@@ -345,7 +345,7 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
 <label style="display:flex;align-items:center;gap:8px;width:auto"><input id="showArchivedSessions" type="checkbox" style="width:auto"> Mostra archiviate</label>
 <span class="spacer"></span><span class="meta">Le sessioni archiviate conservano esami e storico.</span>
 </div>
-<div style="overflow:auto"><table><thead><tr><th>Corso</th><th>Codice</th><th>Disciplina</th><th>Corsisti</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="sessionRows"></tbody></table></div></div>
+<div class="session-list-table-wrap"><table class="session-list-table"><thead><tr><th>Corso</th><th>Codice</th><th>Disciplina</th><th>Corsisti</th><th>Stato</th><th>Azioni</th></tr></thead><tbody id="sessionRows"></tbody></table></div></div>
 <div class="card manager-card" id="userCreateCard">
 <h2>Crea utente</h2>
 <p class="block-hint">Super e Vice possono creare Docenti, Esaminatori e Vice. Solo il Super Amministratore può creare un altro Super Amministratore.</p>
@@ -427,7 +427,7 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
 <input id="cfgLogoCameraFile" type="file" accept="image/*" capture="environment" hidden>
 
 <label>Testo accesso Corsista<input id="cfgStudentHelp" value="Usa le credenziali fornite dal Super Amministratore."></label>
-<label>Testo piè di pagina<input id="cfgFooterText" value="K9 Academy — Piattaforma esami · Release 2.2.6"></label>
+<label>Testo piè di pagina<input id="cfgFooterText" value="K9 Academy — Piattaforma esami · Release 2.2.7"></label>
 <label>Nome organizzazione<input id="cfgOrganization" value="K9 Academy"></label>
 </div>
 <div id="brandingStatus" class="status" style="margin:8px 0 12px"></div>
@@ -544,7 +544,7 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
   </form>
 </dialog>
 
-<footer class="wrap"><div class="status" id="appFooter">K9 Academy — Piattaforma esami · Release 2.2.6</div></footer></main>
+<footer class="wrap"><div class="status" id="appFooter">K9 Academy — Piattaforma esami · Release 2.2.7</div></footer></main>
 
 
 
@@ -564,5 +564,5 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
 </form></dialog>
 
 
-<script src="./assets/js/app.js?v=2260"></script>
+<script src="./assets/js/app.js?v=2270"></script>
 </body></html>
