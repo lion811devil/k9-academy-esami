@@ -2306,9 +2306,15 @@ async function generateCandidateExamReportPdf(x){
    if(strengths.length)overall+=` I risultati migliori riguardano ${joinList(strengths.slice(0,4))}.`;
    if(passedComponents.length)overall+=` Le componenti tecniche ${joinList(passedComponents)} risultano superate.`;
    if(otherComponents.length)overall+=` Restano da considerare le seguenti componenti: ${joinList(otherComponents)}.`;
+   // Il giudizio tecnico registrato e il risultato complessivo vanno descritti distintamente.
+   if(detail.practical_outcome==='idoneo')overall+=' Il giudizio della pratica registrato è IDONEO.';
+   else if(detail.practical_outcome==='non_idoneo')overall+=' Il giudizio della pratica registrato è NON IDONEO; questa decisione non è deducibile dal solo punteggio e la relativa motivazione va verificata nelle osservazioni.';
+   else if(detail.practical_outcome==='da_rivedere')overall+=' Il giudizio della pratica è DA RIVEDERE.';
+   if(detail.passed===false)overall+=` L'ESAME COMPLESSIVO NON È SUPERATO perché la teoria (${Number(detail.score_percentage||0)}%) non raggiunge la soglia richiesta (${Number(detail.pass_percentage||0)}%), indipendentemente dai punteggi pratici.`;
 
    let improve='Non emergono, dai punteggi registrati, aree tecniche specifiche sotto il massimo previsto.';
    if(consolidate.length)improve=`Le priorità di consolidamento riguardano ${joinList(consolidate.slice(0,5))}. Su queste aree è opportuno ricercare maggiore precisione, continuità esecutiva e capacità di mantenere lo standard anche al variare delle condizioni operative.${refine.length?` Gli altri criteri valutati 4/5 risultano positivi e richiedono soprattutto affinamento, non un recupero di base.`:''}`;
+   if(detail.passed===false)improve=`È prioritario consolidare la preparazione teorica: risultato ${Number(detail.score_percentage||0)}% contro soglia ${Number(detail.pass_percentage||0)}%. ${improve}`;
 
    let theory=`La prova teorica si conclude con ${detail.correct_answers||0}/${detail.question_count||0} risposte corrette (${detail.score_percentage||0}%), rispetto a una soglia prevista del ${detail.pass_percentage||0}%.`;
    if(initialErrors>0)theory+=` Sono stati registrati ${initialErrors} ${initialErrors===1?'errore':'errori'} al primo tentativo`;
@@ -2323,6 +2329,7 @@ async function generateCandidateExamReportPdf(x){
 
    let advice='Si consiglia di mantenere l’allenamento sugli standard già acquisiti e di verificare periodicamente la stabilità della prestazione in condizioni differenti.';
    const adviceParts=[];
+   if(detail.passed===false)adviceParts.push(`riprendere il programma teorico e prepararsi a una nuova prova per raggiungere almeno la soglia del ${Number(detail.pass_percentage||0)}%`);
    if(consolidate.length)adviceParts.push(`dedicare esercitazioni mirate a ${joinList(consolidate.slice(0,3))}`);
    if(initialErrors>0)adviceParts.push('riprendere gli argomenti teorici relativi alle risposte inizialmente errate, verificandone la comprensione e non la sola memorizzazione');
    if(profConsolidate.length)adviceParts.push(`consolidare sul piano professionale ${joinList(profConsolidate.slice(0,2))}`);
@@ -2352,7 +2359,8 @@ async function generateCandidateExamReportPdf(x){
  await line('Punteggio pratica',detail.practical_score==null?'Non compilato':`${detail.practical_score}/50`);
  await criterionRows(professionalRows,'Valutazione professionalità');
  await line('Punteggio professionalità',detail.professional_score==null?'Non compilato':`${detail.professional_score}/20`);
- await line('Esito pratica',displayedPracticeOutcome({...x,practical_outcome:detail.practical_outcome}));
+ await line('Esito pratica (registrato)',displayedPracticeOutcome({...x,practical_outcome:detail.practical_outcome}));
+ if(detail.passed===false)await line('Motivo esame non superato',`Teoria ${Number(detail.score_percentage||0)}% inferiore alla soglia ${Number(detail.pass_percentage||0)}%`);
  if(components.length){
    await heading('Componenti tecniche');
    for(let i=0;i<components.length;i++)await line(`${i+1}. ${components[i].name}`,componentStatusLabel(components[i].status));
@@ -2541,11 +2549,20 @@ function avg(values){
 }
 async function loadDidacticStats(){
  if(!can('analytics'))return;
- let box=$('k9DidacticStats');if(!box){box=document.createElement('div');box.id='k9DidacticStats';box.className='card';$('analyticsCard').appendChild(box);}
+ let box=$('k9DidacticStats');
+ if(!box){box=document.createElement('div');box.id='k9DidacticStats';box.className='card';$('analyticsCard').appendChild(box);}
  box.textContent='Caricamento indicatori didattici…';
- const{data,error}=await sb.rpc('k9_didactic_stats');if(error){box.textContent=error.message;return;}
- const d=data||{}, table=(title,headers,rows)=>`<h3>${title}</h3><div style="overflow:auto"><table><thead><tr>${headers.map(x=>`<th>${qbEscape(x)}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${row.map(x=>`<td>${qbEscape(x??'—')}</td>`).join('')}</tr>`).join('')||'<tr><td colspan="6">Nessun dato</td></tr>'}</tbody></table></div>`;
- box.innerHTML=`<h2>Analisi didattica</h2><p>Prove concluse; errori iniziali e finali distinti. Tempo medio dalla partenza alla prima risposta: ${d.mean_seconds_from_start==null?'—':Number(d.mean_seconds_from_start)+' s'} (non durata per singola domanda).</p><button class="btn ghost" onclick="loadDidacticStats()">Aggiorna</button><button class="btn ghost" id="k9ExportStats">Esporta indicatori JSON</button>`+table('Domande (prime 100 per errori iniziali)',['Disciplina','Codice','Utilizzi','Errori iniziali','Errori finali','Correzioni'],(d.questions||[]).map(x=>[labels[x.discipline],x.code,x.uses,x.initial_errors,x.final_errors,x.retries]))+table('Argomenti',['Disciplina','Categoria','Utilizzi','Errori iniziali','Errori finali','Correzioni'],(d.categories||[]).map(x=>[labels[x.discipline],x.category,x.uses,x.initial_errors,x.final_errors,x.retries]))+table('Alternative errate (ordine originale della banca)',['Disciplina','Codice','Alternativa','Selezioni'],(d.wrong_choices||[]).map(x=>[labels[x.discipline],x.code,String.fromCharCode(65+Number(x.original_choice)),x.uses]));
+ const {data,error}=await sb.rpc('k9_didactic_stats');
+ if(error){box.textContent=error.message;return;}
+ const d=data||{};
+ // Tabella semantica su desktop; schede leggibili su smartphone, senza scroll orizzontale.
+ const table=(title,headers,rows)=>`<section class="k9-didactic-section"><h3>${qbEscape(title)}</h3><div class="k9-didactic-table-wrap"><table class="k9-didactic-table" aria-label="${qbEscape(title)}"><thead><tr>${headers.map(x=>`<th scope="col">${qbEscape(x)}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map(row=>`<tr>${headers.map((head,i)=>`<td data-label="${qbEscape(head)}">${qbEscape(row[i]??'—')}</td>`).join('')}</tr>`).join(''):`<tr class="k9-didactic-empty"><td colspan="${headers.length}">Nessun dato disponibile</td></tr>`}</tbody></table></div></section>`;
+ const mean=d.mean_seconds_from_start==null?'non disponibile':`${Number(d.mean_seconds_from_start)} secondi`;
+ box.innerHTML=`<h2>Analisi didattica</h2><p class="block-hint">Prove concluse: errori iniziali e finali distinti. Tempo medio tra l'avvio e la prima risposta: ${qbEscape(mean)}. Non indica il tempo impiegato per ogni domanda.</p><div class="k9-didactic-actions"><button type="button" class="btn ghost" id="k9RefreshDidactic">Aggiorna</button><button type="button" class="btn ghost" id="k9ExportStats">Esporta indicatori JSON</button></div>`
+ +table('Domande (prime 100 per errori iniziali)',['Disciplina','Codice','Utilizzi','Errori iniziali','Errori finali','Correzioni'],(d.questions||[]).map(x=>[labels[x.discipline]||x.discipline,x.code,x.uses,x.initial_errors,x.final_errors,x.retries]))
+ +table('Argomenti',['Disciplina','Categoria','Utilizzi','Errori iniziali','Errori finali','Correzioni'],(d.categories||[]).map(x=>[labels[x.discipline]||x.discipline,x.category,x.uses,x.initial_errors,x.final_errors,x.retries]))
+ +table('Alternative errate (ordine originale della banca)',['Disciplina','Codice','Alternativa','Selezioni'],(d.wrong_choices||[]).map(x=>[labels[x.discipline]||x.discipline,x.code,Number.isInteger(Number(x.original_choice))&&Number(x.original_choice)>=0&&Number(x.original_choice)<=3?String.fromCharCode(65+Number(x.original_choice)):'—',x.uses]));
+ $('k9RefreshDidactic').onclick=loadDidacticStats;
  $('k9ExportStats').onclick=()=>qbDownloadText(JSON.stringify(d,null,2),'k9-statistiche.json','application/json');
 }
 function renderAnalyticsBar(container,label,value,total){
@@ -3047,7 +3064,7 @@ window.openFinalResult=encoded=>{
  const theoryState=x.passed===true?'Superata':x.passed===false?'Non superata':['submitted','expired'].includes(x.status)?'Conclusa':'Da svolgere';
  const theoryClass=x.passed===true?'ok':x.passed===false?'bad':'warn';
  $('finalResultBody').innerHTML=`
- <div class="result-summary"><h3>Stato finale</h3><span class="result-state ${statusClass}">${status.label}</span></div>
+ <div class="result-summary"><h3>Stato finale</h3><span class="result-state ${statusClass}">${status.label}</span>${x.passed===false?`<p class="status">Motivo del mancato superamento: teoria ${theoryPct}% inferiore alla soglia del ${Number(x.pass_percentage||0)}%. Il giudizio pratico è distinto dall'esito complessivo.</p>`:''}</div>
  <div class="result-grid">
   <div class="result-tile"><div class="meta">Teoria</div><div class="value">${['submitted','expired'].includes(x.status)?theoryPct+'%':'—'}</div><span class="result-state ${theoryClass}">${theoryState}</span></div>
   <div class="result-tile"><div class="meta">Pratica</div><div class="value">${displayedPracticeOutcome(x)}</div><div class="meta">${x.practical_score===null?'Non compilata':x.practical_score+'/50 · '+(practicalPct===null?'—':practicalPct+'%')}</div></div>
@@ -3059,7 +3076,8 @@ window.openFinalResult=encoded=>{
   <div class="result-list-row"><b>Corrette</b><span>${x.correct_answers||0}</span></div>
   <div class="result-list-row"><b>Soglia teoria</b><span>${x.pass_percentage||0}%</span></div>
   <div class="result-list-row"><b>Esaminatore</b><span>${k9EscapeHtml(x.evaluator_name||x.evaluator_email||'Non assegnato')}</span></div>
-  <div class="result-list-row"><b>Esito pratica</b><span>${displayedPracticeOutcome(x)}</span></div>
+  <div class="result-list-row"><b>Esito pratica registrato</b><span>${displayedPracticeOutcome(x)} (giudizio del valutatore, non dedotto dal punteggio)</span></div>
+  ${x.practical_outcome==='non_idoneo'&&Number(x.practical_score)>=30&&Number(x.professional_score)>=12&&mantrailingComponentsComplete(x)?`<div class="result-list-row"><b>Verifica coerenza</b><span>NON IDONEO registrato nonostante punteggi pratici almeno sufficienti e componenti superate. Verificare la motivazione nelle osservazioni; la decisione registrata non viene modificata automaticamente.</span></div>`:''}
   ${x.discipline==='mantrailing'?`<div class="result-list-row result-components-row"><b>Componenti estratte</b><span>${normalizePracticalComponents(x.practical_components).length?normalizePracticalComponents(x.practical_components).map((c,i)=>`Componente ${i+1}: ${k9EscapeHtml(c.name)} — ${k9EscapeHtml(componentStatusLabel(c.status))}`).join('<br>'):'Non ancora generate'}</span></div>`:''}
   <div class="result-list-row"><b>Pratica finalizzata</b><span>${x.practical_completed_at?new Date(x.practical_completed_at).toLocaleString('it-IT'):'No'}</span></div>
   <div class="result-list-row"><b>Osservazioni</b><span>${k9EscapeHtml(x.practical_notes||'—')}</span></div>
@@ -3293,14 +3311,16 @@ function examAdvisoryRecommendation(exam,practicalScore,professionalScore,disc,c
    if(rows.some(c=>c.status==='da_rivedere'))return{code:'waiting',label:'DA RIVEDERE',reason:'Almeno una componente tecnica è stata indicata come DA RIVEDERE.'};
    if(rows.some(c=>c.status==='non_superata'))return{code:'bad',label:'CONSIGLIO: NON IDONEO',reason:'Almeno una componente tecnica obbligatoria non è stata superata.'};
  }
- if(!theoryPassed)return{code:'bad',label:'CONSIGLIO: NON IDONEO',reason:`La prova teorica non ha raggiunto la soglia prevista (${exam?.pass_percentage||0}%).`};
+ // Il consiglio sulla pratica non deve essere trasformato in NON IDONEO soltanto
+ // per il mancato superamento della teoria: sono due valutazioni autonome.
  if(practicalPct<60||professionalPct<60){
    const parts=[];
    if(practicalPct<60)parts.push(`pratica ${practicalPct}%`);
    if(professionalPct<60)parts.push(`professionalità ${professionalPct}%`);
    return{code:'bad',label:'CONSIGLIO: NON IDONEO',reason:`L'indicazione orientativa segnala valori inferiori al livello sufficiente del 60%: ${parts.join(' e ')}.`};
  }
- return{code:'ok',label:'CONSIGLIO: IDONEO',reason:`Teoria superata; pratica ${practicalPct}% e professionalità ${professionalPct}%, entrambe almeno al livello sufficiente del 60%.`};
+ const theoryNote=theoryPassed?'Teoria superata.':`ATTENZIONE: teoria non superata (${Number(exam?.score_percentage||0)}%; soglia ${Number(exam?.pass_percentage||0)}%): l'esame complessivo rimane NON SUPERATO.`;
+ return{code:'ok',label:'PRATICA: POSITIVA',reason:`Valutazione pratica orientativa: tecnica ${practicalPct}% e professionalità ${professionalPct}%, entrambe almeno al livello sufficiente del 60%; componenti obbligatorie valutate. ${theoryNote} Il giudizio pratico resta del valutatore.`};
 }
 function updateExamRecommendation(){
  const value=$('examRecommendationValue'),reason=$('examRecommendationReason');
@@ -3465,20 +3485,27 @@ function generateProfessionalAssessmentText(){
  else if(profLevel==='buono')professional=' Il comportamento professionale è risultato adeguato, con buona affidabilità e capacità di operare nel rispetto delle indicazioni ricevute.';
  else if(profLevel==='sufficiente')professional=" La professionalità risulta sufficiente, pur richiedendo maggiore continuità nell'organizzazione, nella comunicazione e nell'autonomia decisionale.";
  else professional=' Sul piano professionale sono necessari ulteriori miglioramenti in termini di affidabilità, organizzazione, comunicazione e autonomia operativa.';
- let conclusion=outcome==='idoneo'?' Nel complesso, la prestazione risulta coerente con un giudizio di idoneità.':outcome==='non_idoneo'?' Nel complesso, gli elementi rilevati non consentono al momento di esprimere un giudizio di idoneità; si raccomanda un percorso di consolidamento mirato prima di una nuova valutazione.':outcome==='da_rivedere'?' Il quadro complessivo richiede un ulteriore approfondimento e una successiva rivalutazione prima della definizione dell’esito.':' La valutazione conclusiva sarà registrata al termine della valutazione pratica.';
+ // Distinguere sempre il giudizio della pratica dall'esito complessivo.
+ const praticaAdeguata=practicalScore>=30&&professionalScore>=12&&(disc!=='mantrailing'||(components.length===2&&components.every(c=>c.status==='superata')));
+ let conclusion=outcome==='idoneo'?' La prova pratica è stata valutata IDONEA.':outcome==='non_idoneo'?(praticaAdeguata?' La prova pratica è stata registrata NON IDONEA nonostante punteggi pratici sufficienti e componenti obbligatorie superate. Il motivo specifico di tale giudizio deve essere documentato dal valutatore; i punteggi da soli non consentono di ricostruirlo.':' La prova pratica è stata registrata NON IDONEA; si raccomanda un consolidamento mirato prima di una nuova valutazione.'):outcome==='da_rivedere'?' La prova pratica è DA RIVEDERE e richiede una successiva rivalutazione.':' Il giudizio conclusivo della pratica deve ancora essere registrato.';
+ if(exam.passed===false)conclusion+=` L'ESAME COMPLESSIVO NON È SUPERATO: la teoria (${Math.round(theoryPct)}%) non raggiunge la soglia del ${Number(exam.pass_percentage||0)}%, indipendentemente dai punteggi della pratica.`;
  let text=(opening+theory+detail+professional+componentText+conclusion).replace(/\s+/g,' ').trim();
  return text;
 }
+let k9LastAutoGeneratedPracticeNotes='';
 function generateProfessionalAssessment(){
  if(!currentPractice)return note('Apri prima una valutazione pratica.',true);
  const missingPractice=practical[currentPractice.disc].some((_,i)=>!practiceValues[i]), missingProfessional=professionalCriteria.some((_,i)=>!professionalValues[i]);
  if(missingPractice||missingProfessional)return note('Assegna prima tutti i punteggi pratici e di professionalità.',true);
- $('practiceNotes').value=generateProfessionalAssessmentText(); note('Valutazione professionale generata. Puoi modificarla prima di salvare.');
+ k9LastAutoGeneratedPracticeNotes=generateProfessionalAssessmentText();
+ $('practiceNotes').value=k9LastAutoGeneratedPracticeNotes;
+ note('Valutazione professionale generata. Puoi modificarla prima di salvare.');
 }
 
 window.openPractice=(id,disc,criteriaEncoded,professionalEncoded,notesEncoded,outcomeEncoded,componentsEncoded)=>{
  if(!requirePermission('practice_evaluation','Valutazione pratica non abilitata per questo ruolo.'))return;
  currentPractice={id,disc,components:normalizePracticalComponents(JSON.parse(decodeURIComponent(componentsEncoded||'%5B%5D')))};
+ k9LastAutoGeneratedPracticeNotes='';
  const savedCriteria=JSON.parse(decodeURIComponent(criteriaEncoded||'%5B%5D'));
  const savedProfessional=JSON.parse(decodeURIComponent(professionalEncoded||'%5B%5D'));
  practiceValues={};professionalValues={};
@@ -3517,8 +3544,17 @@ $('savePractice').onclick=async e=>{
      return;
    }
  }
- const rec=examAdvisoryRecommendation((examArchiveData||[]).find(x=>String(x.id)===String(currentPractice.id))||{},Object.values(practiceValues).reduce((a,v)=>a+Number(v),0),Object.values(professionalValues).reduce((a,v)=>a+Number(v),0),currentPractice.disc,currentPractice.components,true,true);
- if(((outcome==='idoneo'&&rec.code!=='ok')||(outcome==='non_idoneo'&&rec.code==='ok'))&&!$('practiceNotes').value.trim())return note('Motiva nelle osservazioni il giudizio diverso dal consiglio automatico.',true);
+ const actualPracticeScore=Object.values(practiceValues).reduce((a,v)=>a+Number(v),0);
+ const actualProfessionalScore=Object.values(professionalValues).reduce((a,v)=>a+Number(v),0);
+ const rec=examAdvisoryRecommendation((examArchiveData||[]).find(x=>String(x.id)===String(currentPractice.id))||{},actualPracticeScore,actualProfessionalScore,currentPractice.disc,currentPractice.components,true,true);
+ const notes=$('practiceNotes').value.trim();
+ if(((outcome==='idoneo'&&rec.code!=='ok')||(outcome==='non_idoneo'&&rec.code==='ok'))&&!notes)return note('Motiva nelle osservazioni il giudizio diverso dal consiglio automatico.',true);
+ // Un rapporto autogenerato non costituisce, da solo, motivazione di un NON IDONEO
+ // con punteggi elevati e componenti obbligatorie superate.
+ const practiceLooksPositive=actualPracticeScore>=30&&actualProfessionalScore>=12&&(currentPractice.disc!=='mantrailing'||(currentPractice.components.length===2&&currentPractice.components.every(c=>c.status==='superata')));
+ if(outcome==='non_idoneo'&&practiceLooksPositive&&(!notes||notes===generateProfessionalAssessmentText()||(!!k9LastAutoGeneratedPracticeNotes&&notes===k9LastAutoGeneratedPracticeNotes))){
+   return note('La pratica ha punteggi sufficienti ma è stata dichiarata NON IDONEA. Inserisci una motivazione specifica e personale, oltre al testo generato automaticamente.',true);
+ }
  const criteria=practical[currentPractice.disc].map((label,i)=>({label,score:practiceValues[i]}));
  const professional_criteria=professionalCriteria.map((label,i)=>({label,score:professionalValues[i]}));
  const practical_score=criteria.reduce((a,x)=>a+x.score,0);
@@ -3666,7 +3702,9 @@ function renderQuestionBank(){
  if(summary){
    if(discipline){
      const totalDisc=Number(qbSummary.find(x=>x.discipline===discipline)?.total||0);
-     summary.innerHTML=`<b>${labels[discipline]||discipline}</b> · ${qbTotal} risultati su ${totalDisc} · ${rows.length} in pagina · ${Number(qbSummary.find(x=>x.discipline===discipline)?.medium||0)} medie / ${Number(qbSummary.find(x=>x.discipline===discipline)?.hard||0)} difficili attive`;
+     const counts=qbSummary.find(x=>x.discipline===discipline)||{};
+     const easyNote=counts.easy==null?'':` / ${Number(counts.easy)} facili attive`;
+     summary.innerHTML=`<b>${qbEscape(labels[discipline]||discipline)}</b> · ${qbTotal} risultati su ${totalDisc} · ${rows.length} in pagina · ${Number(counts.medium||0)} medie / ${Number(counts.hard||0)} difficili${easyNote} · priorità medie/difficili`;
    }else{
      summary.textContent=`Tutte le discipline · ${qbTotal} risultati · ${rows.length} in pagina`;
    }
@@ -3687,7 +3725,7 @@ function renderQuestionBank(){
      <td data-label="Risposta corretta" class="qb-answer-cell"><span class="qb-correct-letter">${letter}</span><span class="qb-expand-text">${qbEscape(answer)}</span><button type="button" class="qb-text-toggle" onclick="qbToggleText(this)">Mostra tutto</button></td>
      <td data-label="Spiegazione" class="qb-explanation-cell"><span class="qb-expand-text">${qbEscape(explanation)}</span><button type="button" class="qb-text-toggle" onclick="qbToggleText(this)">Mostra tutto</button></td>
      <td data-label="Categoria">${qbEscape(x.category)}</td>
-     <td data-label="Livello"><strong>${x.difficulty==='difficile'?'Difficile':x.difficulty==='medio'?'Media':'Facile · esclusa'}</strong></td>
+     <td data-label="Livello"><strong>${x.difficulty==='difficile'?'Difficile':x.difficulty==='medio'?'Media':'Facile · priorità ridotta'}</strong></td>
      <td data-label="Stato"><span class="qb-status ${x.active?'on':'off'}">${x.active?'Attiva':'Disattivata'}</span><br><small>${qbEscape(x.validation_status||'da_verificare')} · v${Number(x.k9_version||1)} · var. ${Number(x.variant_number||1)}</small></td>
      <td data-label="Azioni"><button type="button" class="btn ghost" onclick="qbEdit('${x.id}')">Modifica</button> <button type="button" class="btn ghost" onclick="qbDuplicate('${x.id}')">Crea variante</button></td>
    </tr>`;
@@ -3783,7 +3821,7 @@ async function qbImportCsv(file){
    else if(!validDisc.includes(r.discipline)||!r.category||!r.question_text||!r.explanation||!options.every(Boolean))reason='campi obbligatori mancanti o disciplina non valida';
    else if(new Set(options.map(qbNorm)).size!==4)reason='alternative duplicate';
    else if(!/^[0-3]$/.test(r.correct_option))reason='risposta corretta: atteso 0, 1, 2 o 3';
-   else if(r.difficulty&&!['medio','difficile'].includes(r.difficulty))reason='livello non valido: usare medio o difficile';
+   else if(r.difficulty&&!['facile','medio','difficile'].includes(r.difficulty))reason='livello non valido: usare facile, medio o difficile';
    else if(r.validation_status&&!['da_verificare','bozza','approvata'].includes(r.validation_status))reason='validazione non valida';
    else if(r.variant_number&&!/^[1-9][0-9]*$/.test(r.variant_number))reason='numero variante non valido';
    else if(r.active&&!['true','false'].includes(r.active.toLowerCase()))reason='stato non valido';
