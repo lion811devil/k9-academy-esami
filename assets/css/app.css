@@ -1442,3 +1442,89 @@ body.role-vice_admin #roleVisualIdentity{font-weight:800}
  .archive-table tbody td[colspan]::before{display:none}
  .archive-table tbody td .btn{width:auto;min-height:42px}
 }
+
+
+/* K9 2.2.3 — intestazione compatta e amministrazione mobile.
+   Solo presentazione: branding configurabile, dati ed esami invariati. */
+header{padding:0}
+header>.wrap{padding:10px 16px}
+header .header-brand{display:flex;align-items:center;gap:12px;min-width:0}
+header .header-copy{min-width:0;flex:1 1 auto;overflow-wrap:anywhere}
+header .header-copy h1{font-size:clamp(21px,3vw,30px);line-height:1.12;margin:0 0 3px;font-weight:700}
+header #appSubtitle{font-size:clamp(11px,1.5vw,14px);line-height:1.26;margin:0;overflow-wrap:anywhere}
+header .official-logo-box{width:62px;height:62px;flex:0 0 62px;border-radius:13px;box-shadow:none}
+header .official-logo-box img{padding:3px}
+header .official-logo-placeholder{font-size:18px}
+@media(max-width:700px){
+ header>.wrap{padding:8px 12px}
+ header .header-brand{gap:10px}
+ header .official-logo-box{width:52px;height:52px;flex:0 0 52px;border-radius:11px}
+ header .header-copy h1{font-size:clamp(19px,5.3vw,23px);line-height:1.08;margin:0 0 2px}
+ header #appSubtitle{font-size:11px;line-height:1.2}
+}
+@media(max-width:360px){
+ header>.wrap{padding:7px 10px}
+ header .official-logo-box{width:46px;height:46px;flex:0 0 46px}
+ header .header-copy h1{font-size:19px}
+}
+
+/* Finestre anagrafica e password: nessun taglio laterale, scroll verticale. */
+#candidateDataDialog,#resetPasswordDialog{
+ width:min(620px,calc(100vw - 24px));max-width:calc(100vw - 24px);
+ max-height:calc(100dvh - 30px);min-width:0;box-sizing:border-box;
+ margin:auto;padding:0;overflow-x:hidden;overflow-y:auto;
+ border:0;border-radius:16px;
+}
+#candidateDataDialog::backdrop,#resetPasswordDialog::backdrop{background:rgba(20,10,30,.42)}
+#candidateDataDialog>form,#resetPasswordDialog>form{
+ width:100%;max-width:100%;min-width:0!important;max-height:calc(100dvh - 30px);
+ overflow-x:hidden;overflow-y:auto;margin:0;box-sizing:border-box;
+}
+#candidateDataDialog input,#resetPasswordDialog input{max-width:100%;min-width:0}
+#candidateDataDialog .grid,#resetPasswordDialog .grid{min-width:0}
+@media(max-width:720px){
+ #candidateDataDialog>form,#resetPasswordDialog>form{padding:18px 14px 20px}
+ #candidateDataDialog h2,#resetPasswordDialog h2{font-size:22px;line-height:1.2;overflow-wrap:anywhere}
+ #candidateDataDialog .grid{grid-template-columns:minmax(0,1fr)!important;gap:8px}
+ #candidateDataDialog .grid>label{padding:4px 0;min-width:0}
+ #candidateDataDialog .btn,#resetPasswordDialog .btn{width:100%;max-width:100%}
+}
+
+/* Elenchi corsi e utenti: su desktop restano le tabelle, sul cellulare schede. */
+@media(max-width:720px){
+ #userRows,#sessionRows{display:grid;gap:10px;min-width:0;width:100%}
+ #userRows tr,#sessionRows tr{
+  display:grid;gap:7px;grid-template-columns:minmax(0,1fr);
+  padding:12px;border:1px solid var(--line);border-radius:14px;
+  background:var(--card);width:100%;min-width:0;box-sizing:border-box;
+ }
+ #userRows tr.archived-user-row,#sessionRows tr.archived-session-row{opacity:.82}
+ #userRows td,#sessionRows td{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:10px;min-width:0;width:100%;max-width:100%;padding:7px 0;
+  border-bottom:1px solid var(--line);overflow-wrap:anywhere;
+ }
+ #userRows td:last-child,#sessionRows td:last-child{border-bottom:0}
+ #userRows td::before,#sessionRows td::before{
+  content:attr(data-label);color:var(--muted);font-size:12px;font-weight:700;
+  flex:0 0 72px;min-width:0;padding-top:4px;
+ }
+ #userRows td:first-child::before,#sessionRows td:first-child::before{display:none}
+ #userRows td:first-child,#sessionRows td:first-child{display:block;font-weight:700}
+ #userRows td>*:not(.user-actions),#sessionRows td>*{min-width:0;max-width:100%}
+ #userRows .profile-name-cell{min-width:0;width:100%}
+ #userRows td .role-select{width:auto;max-width:100%;min-width:0}
+ #userRows .user-actions{width:100%;min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #userRows .user-actions .btn{width:100%;min-width:0;max-width:100%;white-space:normal}
+ #userRows .reset-user-password,#sessionRows td:last-child .btn{width:100%;min-width:0}
+ #userRows td:last-child,#sessionRows td:last-child{display:block}
+ #userRows td:last-child::before,#sessionRows td:last-child::before{display:block;margin-bottom:7px}
+ #userRows tr .empty-state,#sessionRows tr .empty-state{width:100%}
+ #userRows tr:has(td[colspan]),#sessionRows tr:has(td[colspan]){display:block}
+ #userRows td[colspan],#sessionRows td[colspan]{display:block;width:100%;border:0}
+ #userRows td[colspan]::before,#sessionRows td[colspan]::before{display:none}
+ #sessionListCard table{display:block;min-width:0!important;width:100%}
+ #sessionListCard table thead{display:none}
+ #userManagementCard table{display:block;min-width:0!important;width:100%}
+ #userManagementCard table thead{display:none}
+}
