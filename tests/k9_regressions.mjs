@@ -55,4 +55,15 @@ const users=readFileSync(new URL('../src/js/06-users-events.js',import.meta.url)
 assert.match(users,/k9EscapeHtml\(c\.password\)/);
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.match(html,/id="newCandidatePassword" type="password"/);
-console.log('Regressioni: editing facile, duplicati globali, ruoli e output HTML: OK');
+// Garanzia su esiti finali: pratica IDONEA non basta se la teoria e' indefinita.
+const manager=readFileSync(new URL('../src/js/04-management.js', import.meta.url),'utf8');
+const finalFn=manager.slice(manager.indexOf('function finalExamStatus(x){'),manager.indexOf('window.openFinalResult=',manager.indexOf('function finalExamStatus(x){')));
+assert.ok(finalFn.startsWith('function finalExamStatus(x){'));
+const finalCtx={mantrailingComponentsComplete:()=>true};
+vm.createContext(finalCtx);vm.runInContext(finalFn,finalCtx);
+const result=x=>vm.runInContext(`finalExamStatus(${JSON.stringify(x)})`,finalCtx);
+assert.equal(result({status:'submitted',passed:null,practical_outcome:'idoneo',discipline:'dogsitter'}).code,'waiting');
+assert.equal(result({status:'submitted',passed:false,practical_outcome:'idoneo',discipline:'dogsitter'}).code,'failed');
+assert.equal(result({status:'submitted',passed:true,practical_outcome:'idoneo',discipline:'dogsitter'}).code,'complete');
+assert.equal(result({status:'assigned',passed:true,practical_outcome:'idoneo',discipline:'dogsitter'}).code,'waiting');
+console.log('Regressioni: editing facile, duplicati globali, ruoli, HTML ed esito finale: OK');

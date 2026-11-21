@@ -7,6 +7,10 @@ root=Path(__file__).resolve().parents[1]
 s=(root/'index.html').read_text()
 js=(root/'assets/js/app.js').read_text()
 assert js==''.join(p.read_text() for p in sorted((root/'src/js').glob('*.js')))
+# La sezione Corsi preparati viene spostata: conservare l'ancora CSS.
+assert 'wrap.id=sourceId' in (root/'src/js/01-core.js').read_text()
+assert 'class="session-list-table"' in s
+assert '.session-list-table thead{display:none!important}' in (root/'assets/css/app.css').read_text()
 assert 'K9QRCode' not in js and 'qr-vendor.js' not in s
 assert 'qr-vendor.js' not in (root/'service-worker.js').read_text()
 assert 'qbDifficulty' in s and 'value="difficile"' in s
