@@ -295,6 +295,8 @@ function consolidateExamWorkflowLayout(){
    const source=$(sourceId),target=$(targetId);if(!source||!target)return;
    const direct=source.querySelector('h2');if(direct)direct.remove();
    const wrap=document.createElement('section');wrap.className='workflow-embedded-section';
+   // Mantieni l'ID del contenitore: CSS mobile e collegamenti restano validi dopo lo spostamento.
+   wrap.id=sourceId;
    if(permission)wrap.dataset.embeddedPermission=permission;
    const head=document.createElement('div');head.className='workflow-section-head';
    head.innerHTML=`<div><h3>${title}</h3>${subtitle?`<p>${subtitle}</p>`:''}</div>`;
@@ -872,7 +874,7 @@ $('loginBtn').onclick=async()=>{
  }
 };$('logoutBtn').onclick=logoutSafely;
 
-const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.2',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
+const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.7',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
 function bool(v){return v===true||v==='true'}
 
 let brandingObjectUrls={logo:'',icon:''},dynamicManifestUrl='',officialLogoBlobUrl='';
@@ -3043,6 +3045,8 @@ function finalExamStatus(x){
  const theoryDone=['submitted','expired'].includes(x.status);
  if(!theoryDone)return{code:'waiting',label:'Teoria da completare'};
  if(x.passed===false)return{code:'failed',label:'ESAME NON SUPERATO'};
+ // Un giudizio pratico positivo non puo' trasformare una teoria senza esito in un esame superato.
+ if(x.passed!==true)return{code:'waiting',label:'Esito teorico da verificare'};
  if(x.practical_outcome==='idoneo'){
    if(x.discipline==='mantrailing'&&!mantrailingComponentsComplete(x))return{code:'waiting',label:'Componenti da completare'};
    return{code:'complete',label:'ESAME SUPERATO'};
