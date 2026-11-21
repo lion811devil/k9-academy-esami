@@ -195,7 +195,7 @@ function humanFileSize(bytes){
 function documentGenerationHistory(row){
  const list=Array.isArray(row?.generation_history)?row.generation_history:[];
  if(!list.length)return '<div class="status">Le generazioni precedenti alla Release 1.86 restano registrate nel vecchio contatore, ma non dispongono dell’impronta del file PDF.</div>';
- return `<div class="document-generation-list">${list.map(g=>`
+ return `<p class="status">Le registrazioni storiche non garantiscono che il relativo PDF sia stato conservato. Se il file originale manca, non è ricostruibile automaticamente.</p><div class="document-generation-list">${list.map(g=>`
   <div class="document-generation-row">
    <b>Generazione ${Number(g.generation_number||0)}</b>
    <span>${htmlSafe(g.file_name||'PDF')}</span>
@@ -572,14 +572,19 @@ function auditValueLabel(key,value){
 }
 function auditDataSummary(data){
  const d=data||{};const parts=[];
+ // Il DB conserva 0% fino alla consegna: non equivale a un punteggio calcolato.
+ const provisional=d.passed!==true&&d.passed!==false;
+
  // Gli identificativi tecnici restano nel database ma non vengono esposti nella vista ordinaria.
  const map={discipline:'Disciplina',question_count:'Domande',duration_minutes:'Durata (minuti)',pass_percentage:'Soglia di superamento',position:'Numero domanda',selected_option:'Risposta selezionata',is_correct:'Risposta corretta',from:'Da',to:'A',correct_answers:'Risposte corrette',answered_questions:'Risposte date',score_percentage:'Punteggio',passed:'Teoria superata',practical_score:'Punteggio pratica',professional_score:'Professionalità',outcome:'Esito pratica',document_type:'Documento',document_code:'Codice documento',generation_count:'Numero generazioni',file_name:'Nome file PDF',file_size_bytes:'Dimensione PDF (byte)',status:'Stato'};
  Object.keys(map).forEach(k=>{
   if(d[k]===undefined||d[k]===null||d[k]===''||Array.isArray(d[k])||typeof d[k]==='object')return;
+  if(k==='score_percentage'&&provisional)return;
   let value=auditValueLabel(k,d[k]);
   if(k==='score_percentage'||k==='pass_percentage')value=`${value}%`;
   parts.push(`${map[k]}: ${value}`);
  });
+ if(provisional&&d.correct_answers!==undefined&&d.answered_questions!==undefined)parts.push('Punteggio definitivo: disponibile dopo la consegna');
  if(Array.isArray(d.components)&&d.components.length)parts.push(`Componenti tecniche: ${d.components.length}`);
  return parts.join(' · ')||'Operazione registrata dal sistema.';
 }
@@ -595,6 +600,7 @@ function auditEventVisible(e){
  return hasOutcome&&hasScores;
 }
 function auditEventTitle(e){
+ if(e?.event_type==='theory_result'&&e?.event_data?.passed!==true&&e?.event_data?.passed!==false)return 'Avanzamento delle risposte registrato';
  const titles={
   audit_baseline:'Stato iniziale acquisito all’attivazione del registro',
   question_prepared:'Domanda preparata per la prova',
@@ -606,7 +612,8 @@ function auditEventTitle(e){
   document_created:'Documento generato',
   document_regenerated:'Documento rigenerato',
   pdf_traced:'PDF registrato nel fascicolo',
-  course_created:'Corso preparato'
+  course_created:'Corso preparato',
+  theory_result:'Risultato teorico consolidato'
  };
  return titles[e?.event_type]||e?.event_label||'Operazione registrata';
 }
@@ -917,7 +924,7 @@ function generateProfessionalAssessmentText(){
  else if(profLevel==='buono')professional=' Il comportamento professionale è risultato adeguato, con buona affidabilità e capacità di operare nel rispetto delle indicazioni ricevute.';
  else if(profLevel==='sufficiente')professional=" La professionalità risulta sufficiente, pur richiedendo maggiore continuità nell'organizzazione, nella comunicazione e nell'autonomia decisionale.";
  else professional=' Sul piano professionale sono necessari ulteriori miglioramenti in termini di affidabilità, organizzazione, comunicazione e autonomia operativa.';
- let conclusion=outcome==='idoneo'?' Nel complesso, la prestazione risulta coerente con un giudizio di idoneità.':outcome==='non_idoneo'?' Nel complesso, gli elementi rilevati non consentono al momento di esprimere un giudizio di idoneità; si raccomanda un percorso di consolidamento mirato prima di una nuova valutazione.':outcome==='da_rivedere'?' Il quadro complessivo richiede un ulteriore approfondimento e una successiva rivalutazione prima della definizione dell’esito.':' La valutazione conclusiva resta subordinata alla decisione finale dell’esaminatore.';
+ let conclusion=outcome==='idoneo'?' Nel complesso, la prestazione risulta coerente con un giudizio di idoneità.':outcome==='non_idoneo'?' Nel complesso, gli elementi rilevati non consentono al momento di esprimere un giudizio di idoneità; si raccomanda un percorso di consolidamento mirato prima di una nuova valutazione.':outcome==='da_rivedere'?' Il quadro complessivo richiede un ulteriore approfondimento e una successiva rivalutazione prima della definizione dell’esito.':' La valutazione conclusiva sarà registrata al termine della valutazione pratica.';
  let text=(opening+theory+detail+professional+componentText+conclusion).replace(/\s+/g,' ').trim();
  return text;
 }

@@ -1,5 +1,8 @@
 function pdfSafe(value){
- return String(value??'').replace(/[^\x20-\x7EÀ-ÿ]/g,' ');
+ return String(value??'')
+  .replace(/[‘’]/g,"'").replace(/[“”]/g,'"')
+  .replace(/[‐‑‒–—]/g,'-').replace(/…/g,'...')
+  .replace(/[•·]/g,'-').replace(/[^\x20-\x7EÀ-ÿ]/g,' ');
 }
 function hexToRgb(hex,fallback=[91,33,182]){
  const clean=String(hex||'').replace('#','').trim();
@@ -117,6 +120,23 @@ async function pdfAddWatermarkLogo(doc,logo,cx,cy,targetDiameter=210,opacity=.11
 function pdfRoundRectFill(doc,x,y,w,h,r,rgb){
  doc.setFillColor(...rgb);doc.roundedRect(x,y,w,h,r,r,'F');
 }
+// Preserve full names / organization labels inside their allotted width.
+function pdfFittedText(doc,text,x,y,size,maxWidth,minSize=7,style='bold',rgb=[35,35,45],options={}){
+ const normalized=pdfSafe(text);
+ let fitted=size;
+ doc.setFont('helvetica',style);
+ while(fitted>minSize){
+  doc.setFontSize(fitted);
+  if(doc.getTextWidth(normalized)<=maxWidth)break;
+  fitted=Math.max(minSize,fitted-.5);
+ }
+ if(doc.getTextWidth(normalized)>maxWidth){
+  // Even at the minimum font size, do not draw beyond the printable area.
+  let shortened=normalized;
+  while(shortened.length>1&&doc.getTextWidth(shortened+'...')>maxWidth)shortened=shortened.slice(0,-1);
+  pdfText(doc,shortened+'...',x,y,fitted,style,rgb,options);
+ }else pdfText(doc,normalized,x,y,fitted,style,rgb,options);
+}
 function pdfText(doc,text,x,y,size=10,style='normal',rgb=[35,35,45],options={}){
  doc.setFont('helvetica',style);
  doc.setFontSize(size);
@@ -228,7 +248,20 @@ async function registerAndDownloadExamPdf(doc,x,type,code){
  if(data?.sha256!==trace.file_sha256)throw new Error('Impronta PDF non coincidente.');
  downloadExactPdfBuffer(trace.buffer,fileName);await loadDocumentArchive(true,true);return trace;
 }
-async function k9DownloadOriginal(id,generation=null){try{const{data,error}=await sb.rpc('k9_download_pdf',{p_document:id,p_generation:generation});if(error)throw error;if((data.status==='revoked'||data.status==='superseded')&&!confirm('Documento revocato o superato: scaricare solo per archivio?'))return;const bytes=Uint8Array.from(atob(data.base64),c=>c.charCodeAt(0));downloadExactPdfBuffer(bytes.buffer,data.file_name);}catch(e){note(e.message,true)}}
+async function k9DownloadOriginal(id,generation=null){
+ try{
+  const{data,error}=await sb.rpc('k9_download_pdf',{p_document:id,p_generation:generation});
+  if(error)throw error;
+  if((data.status==='revoked'||data.status==='superseded')&&!confirm('Documento revocato o superato: scaricare solo per archivio?'))return;
+  const bytes=Uint8Array.from(atob(data.base64),c=>c.charCodeAt(0));
+  downloadExactPdfBuffer(bytes.buffer,data.file_name);
+ }catch(e){
+  const message=String(e.message||e);
+  if(/originale non conservato/i.test(message)){
+   note('PDF originale non conservato per questa generazione storica. La registrazione resta consultabile, ma il file non può essere ricostruito automaticamente.',true);
+  }else note(message,true);
+ }
+}
 async function k9RevokeDocument(id){const reason=prompt('Motivo della revoca:');if(!reason?.trim())return;const{error}=await sb.rpc('k9_revoke_document',{p_document:id,p_reason:reason.trim()});if(error)return note(error.message,true);note('Documento revocato.');await loadDocumentArchive(false,true);}
 function documentTypeHuman(type){
  return type==='certificate'?'Attestato':type==='candidate_report'?'Report completo':'Verbale';
@@ -311,7 +344,7 @@ async function verifyDocumentCode(){
    return row;
  }catch(e){
    box.classList.add('invalid');
-   box.innerHTML=`<b>Verifica non riuscita</b><p class="status">${String(e.message||e)}</p>`;
+   box.innerHTML=`<b>Verifica non riuscita</b><p class="status">${htmlSafe(String(e.message||e))}</p>`;
    return null;
  }finally{
    if(btn){btn.disabled=false;btn.textContent='Verifica codice'}
@@ -383,7 +416,7 @@ async function generateExamReportPdf(x){
  doc.setFillColor(...brand.header);doc.rect(9,9,W-18,27,'F');
  doc.setFillColor(...brand.primary);doc.rect(9,36,W-18,1.5,'F');
  if(!pdfAddLogo(doc,logo,15,13,20,18))pdfText(doc,'K9',25,25,11,'bold',[255,255,255],{align:'center'});
- pdfText(doc,brand.issuer,40,18,14.5,'bold',[255,255,255]);
+ pdfFittedText(doc,brand.issuer,40,18,14.5,107,7.5,'bold',[255,255,255]);
  if(brand.subtitle)pdfText(doc,brand.subtitle,40,24.8,7.6,'normal',[238,238,242]);
  pdfText(doc,'VERBALE DI VALUTAZIONE TEORICO-PRATICA',40,31,9.2,'bold',[248,248,250]);
  pdfText(doc,`N. ${code}`,191,18,5.8,'bold',[242,242,246],{align:'right'});
@@ -418,7 +451,7 @@ async function generateExamReportPdf(x){
  section('Valutazione pratica');
  item('Punteggio tecnico',x.practical_score==null?'Non compilato':`${x.practical_score}/50`,15,40,{size:9.5});
  item('Professionalità',x.professional_score==null?'Non compilata':`${x.professional_score}/20`,65,40,{size:9.5});
- item('Esito deciso dal valutatore',displayedPracticeOutcome(x),115,72,{size:9.5});
+ item(x.evaluator_id?'Esito del valutatore':'Esito pratica registrato',displayedPracticeOutcome(x),115,72,{size:9.5});
  y+=11.0;
 
  if(x.discipline==='mantrailing'){
@@ -443,23 +476,23 @@ async function generateExamReportPdf(x){
  doc.setFillColor(...brand.pale2);doc.setDrawColor(...hair);doc.roundedRect(15,y-3.2,180,adviceH,1.8,1.8,'FD');
  pdfStatusPill(doc,advisory.label,19,y,58,brand,advisoryType);
  pdfText(doc,'SUPPORTO NON VINCOLANTE',81,y+1.4,7.2,'bold',brand.primary);
- pdfText(doc,'La decisione finale resta al valutatore.',81,y+5.1,7.3,'normal',muted);
+ pdfText(doc,x.practical_completed_at?'L’esito conclusivo è registrato nella scheda.':'Indicazione orientativa: esito ancora da registrare.',81,y+5.1,7.3,'normal',muted);
  pdfText(doc,adviceLines,19,y+10.4,7.7,'normal',ink,{lineHeightFactor:1.15});
  y+=adviceH+3.5;
 
  section('Esito conclusivo registrato');
  pdfStatusPill(doc,final.label,15,y-4.7,52,brand,ftype);
- pdfText(doc,'DECISIONE DEL VALUTATORE',78,y-1.2,6.9,'bold',muted);
+ pdfText(doc,x.evaluator_id?'DECISIONE DEL VALUTATORE':'ESITO PRATICA REGISTRATO',78,y-1.2,6.9,'bold',muted);
  pdfText(doc,displayedPracticeOutcome(x),78,y+3.8,8.8,'bold',ink);
  pdfText(doc,'DATA DI COMPLETAMENTO',136,y-1.2,6.9,'bold',muted);
  pdfText(doc,x.practical_completed_at?new Date(x.practical_completed_at).toLocaleString('it-IT'):'Non finalizzata',136,y+3.8,8.2,'bold',ink);
  y+=11.0;
 
- section('Osservazioni dell’esaminatore');
+ section(x.evaluator_id?'Osservazioni dell’esaminatore':'Osservazioni della valutazione');
  const observationText=pdfSafe(x.practical_notes||'Nessuna osservazione registrata.');
  const maxObsWidth=170;
- // 1.88.2: il verbale resta su una pagina, ma le osservazioni non vengono più troncate.
- // La dimensione viene adattata al testo reale lasciando una fascia protetta per validazione e footer.
+ // A4 in una pagina: misura il testo alle dimensioni effettivamente usate.
+ // Se le note sono troppo estese, indica esplicitamente la continuazione nel report.
  const validationReserve=43;
  const obsBottomLimit=H-20-validationReserve;
  const obsTop=y-3;
@@ -467,18 +500,25 @@ async function generateExamReportPdf(x){
  let obsSize=8.6,obs=[],obsLineHeight=0,obsHeight=0;
  const minObsSize=6.4;
  while(obsSize>=minObsSize){
+   doc.setFont('helvetica','normal');doc.setFontSize(obsSize);
    obs=doc.splitTextToSize(observationText,maxObsWidth);
-   obsLineHeight=obsSize*0.38*1.18;
-   obsHeight=Math.max(24,9+(obs.length*obsLineHeight));
+   obsLineHeight=obsSize*0.35278*1.18;
+   obsHeight=Math.max(24,9+obs.length*obsLineHeight);
    if(obsHeight<=obsAvailable)break;
-   obsSize-=0.2;
+   obsSize=Math.round((obsSize-.2)*10)/10;
  }
- // Ultima protezione: se il testo è eccezionalmente lungo, usa tutta l'area disponibile senza invadere le firme.
  if(obsHeight>obsAvailable){
    obsSize=minObsSize;
-   obs=doc.splitTextToSize(observationText,maxObsWidth);
-   obsLineHeight=obsSize*0.38*1.12;
-   obsHeight=Math.min(obsAvailable,Math.max(24,9+(obs.length*obsLineHeight)));
+   doc.setFont('helvetica','normal');doc.setFontSize(obsSize);
+   const allLines=doc.splitTextToSize(observationText,maxObsWidth);
+   obsLineHeight=obsSize*0.35278*1.18;
+   const limit=Math.max(1,Math.floor((obsAvailable-9)/obsLineHeight));
+   if(allLines.length>limit){
+     const continuation='[Osservazioni integrali nel report completo]';
+     obs=allLines.slice(0,Math.max(0,limit-1));
+     obs.push(continuation);
+   }else obs=allLines;
+   obsHeight=Math.max(24,9+obs.length*obsLineHeight);
  }
  doc.setFillColor(255,255,255);doc.setDrawColor(...hair);doc.roundedRect(15,obsTop,180,obsHeight,1.5,1.5,'FD');
  pdfText(doc,obs,19,y+3.8,obsSize,'normal',ink,{lineHeightFactor:1.18,maxWidth:maxObsWidth});
@@ -549,7 +589,7 @@ async function generateCandidateExamReportPdf(x){
    doc.setDrawColor(...brand.header);doc.setLineWidth(.55);doc.rect(9,9,W-18,H-18,'S');
    doc.setFillColor(...brand.header);doc.rect(9,9,W-18,25,'F');
    if(!pdfAddLogo(doc,logo,15,12,18,17))pdfText(doc,'K9',24,23,10,'bold',[255,255,255],{align:'center'});
-   pdfText(doc,brand.issuer,38,17,12.5,'bold',[255,255,255]);
+   pdfFittedText(doc,brand.issuer,38,17,12.5,105,7.5,'bold',[255,255,255]);
    pdfText(doc,title,38,26,8.2,'bold',[245,245,248]);
    pdfText(doc,`N. ${code}`,191,17,5.8,'bold',[245,245,248],{align:'right'});
    pdfText(doc,`Pagina ${pageNo}`,174,25,6.2,'normal',[245,245,248],{align:'right'});
@@ -614,14 +654,14 @@ async function generateCandidateExamReportPdf(x){
      if(offset<lines.length)await addPage();
    }
  };
- const scorePct=(v,max)=>Number.isFinite(Number(v))&&max?Math.round(Number(v)*100/max):null;
+ const scorePct=(v,max)=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))&&max?Math.round(Number(v)*100/max):null;
  const buildProfessionalAssessment=()=>{
    const pPct=scorePct(detail.practical_score,50);
    const profPct=scorePct(detail.professional_score,20);
    const initialErrors=Number(detail.initial_error_count||0);
    const retries=Number(detail.retry_used||0);
-   const validPractice=practiceRows.filter(r=>Number.isFinite(Number(r?.score)));
-   const validProfessional=professionalRows.filter(r=>Number.isFinite(Number(r?.score)));
+   const validPractice=practiceRows.filter(r=>r?.score!==null&&r?.score!==undefined&&r?.score!==''&&Number.isFinite(Number(r.score)));
+   const validProfessional=professionalRows.filter(r=>r?.score!==null&&r?.score!==undefined&&r?.score!==''&&Number.isFinite(Number(r.score)));
    const strengths=validPractice.filter(r=>Number(r.score)>=5).map(r=>r.label).filter(Boolean);
    const consolidate=validPractice.filter(r=>Number(r.score)<=3).sort((a,b)=>Number(a.score)-Number(b.score)).map(r=>r.label).filter(Boolean);
    const refine=validPractice.filter(r=>Number(r.score)===4).map(r=>r.label).filter(Boolean);
@@ -706,13 +746,14 @@ async function generateCandidateExamReportPdf(x){
  await reportParagraph(assessment.advice);
  if(String(detail.practical_notes||'').trim()){
    separator();
-   await reportSubheading('Note registrate dal valutatore');
+   await reportSubheading(detail.evaluator_name||x.evaluator_id?'Note registrate dal valutatore':'Note registrate nella valutazione');
    await reportParagraph(detail.practical_notes);
  }
  await heading('Esito complessivo');
  await line('Stato finale',finalExamStatus({...x,passed:detail.passed,practical_outcome:detail.practical_outcome,practical_components:detail.practical_components}).label);
 
- await addPage('DETTAGLIO DOMANDE E RISPOSTE');
+ if(y>243)await addPage('DETTAGLIO DOMANDE E RISPOSTE');
+ else await heading('Dettaglio domande e risposte');
  if(!questions.length){
    await line('Dettaglio teoria','Nessuna domanda registrata per questo esame.');
  }else{
@@ -732,16 +773,25 @@ async function generateCandidateExamReportPdf(x){
      const selectedLines=correction?doc.splitTextToSize(`Risposta dopo ripetizione: ${pdfSafe(selectedText)} — ${q.is_correct===true?'CORRETTA':'ERRATA'}`,170):[];
      const correctLines=doc.splitTextToSize(`Risposta corretta: ${pdfSafe(correctText)}`,170);
      const explLines=doc.splitTextToSize(`Spiegazione: ${pdfSafe(q.explanation||'Nessuna spiegazione registrata.')}`,170);
-     const need=9+questionLines.length*4+firstLines.length*3.8+selectedLines.length*3.8+correctLines.length*3.8+explLines.length*3.8+10;
-     await ensure(Math.min(need,80));
+     // Each answer is flowed line-by-line across pages; long explanations are never lost.
+     const writeLines=async(lines,x0,sz,sty,color,step)=>{
+       for(const textLine of lines){
+         await ensure(step+2);
+         pdfText(doc,textLine,x0,y,sz,sty,color);
+         y+=step;
+       }
+       y+=1;
+     };
+     await ensure(24);
      pdfText(doc,`${q.code||'DOMANDA'} · ${q.category||'Senza categoria'}`,15,y,6.2,'bold',brand.primary);
      pdfText(doc,state,195,y,6.6,'bold',q.is_correct===true?[22,101,52]:[153,27,27],{align:'right'});
      y+=5;
-     pdfText(doc,questionLines,15,y,7.8,'bold',ink);y+=questionLines.length*4+2;
-     pdfText(doc,firstLines,19,y,7.1,'normal',correction?[153,27,27]:(q.is_correct===true?[22,101,52]:[153,27,27]));y+=firstLines.length*3.8+1;
-     if(selectedLines.length){pdfText(doc,selectedLines,19,y,7.1,'bold',q.is_correct===true?[22,101,52]:[153,27,27]);y+=selectedLines.length*3.8+1;}
-     pdfText(doc,correctLines,19,y,7.1,'bold',[22,101,52]);y+=correctLines.length*3.8+1;
-     pdfText(doc,explLines,19,y,6.8,'normal',muted);y+=explLines.length*3.8+3;
+     await writeLines(questionLines,15,7.8,'bold',ink,4);
+     await writeLines(firstLines,19,7.1,'normal',correction?[153,27,27]:(q.is_correct===true?[22,101,52]:[153,27,27]),3.8);
+     if(selectedLines.length)await writeLines(selectedLines,19,7.1,'bold',q.is_correct===true?[22,101,52]:[153,27,27],3.8);
+     await writeLines(correctLines,19,7.1,'bold',[22,101,52],3.8);
+     await writeLines(explLines,19,6.8,'normal',muted,3.8);
+     await ensure(7);
      doc.setDrawColor(...hair);doc.line(15,y,195,y);y+=5;
    }
  }
@@ -784,7 +834,7 @@ async function generateCertificatePdf(x){
  if(!pdfAddLogo(doc,logo,20,19,24,22)){
    pdfText(doc,'K9',32,33,12,'bold',brand.dark,{align:'center'});
  }
- pdfText(doc,brand.issuer,51,25,17,'bold',brand.dark);
+ pdfFittedText(doc,brand.issuer,51,25,17,177,8,'bold',brand.dark);
  if(brand.subtitle)pdfText(doc,brand.subtitle,51,33,8,'normal',muted);
  pdfText(doc,`N. ${code}`,W-20,25,6.2,'bold',muted,{align:'right'});
  pdfText(doc,examDateHuman(x),W-43,33,7.5,'normal',muted,{align:'right'});
@@ -793,14 +843,14 @@ async function generateCertificatePdf(x){
  // Titolo.
  pdfText(doc,'ATTESTATO DI IDONEITÀ',W/2,58,29,'bold',brand.dark,{align:'center'});
  pdfText(doc,'rilasciato a',W/2,70,11.5,'normal',muted,{align:'center'});
- pdfText(doc,candidate,W/2,89,32,'bold',accent,{align:'center'});
+ pdfFittedText(doc,candidate,W/2,89,32,244,16,'bold',accent,{align:'center'});
 
  // Formula istituzionale.
  const statement1='per aver completato con esito positivo il percorso di valutazione teorica e pratica';
  const statement2='e aver dimostrato il possesso delle competenze previste per la disciplina';
  pdfText(doc,statement1,W/2,103,12,'normal',ink,{align:'center'});
  pdfText(doc,statement2,W/2,112,12,'normal',ink,{align:'center'});
- pdfText(doc,discipline,W/2,128,25,'bold',brand.dark,{align:'center'});
+ pdfFittedText(doc,discipline,W/2,128,25,214,15,'bold',brand.dark,{align:'center'});
 
  // Sigillo di esito sobrio.
  pdfStatusPill(doc,'IDONEO',W/2-23,136,46,brand,'ok');
@@ -836,7 +886,7 @@ async function generateCertificatePdf(x){
  const placeDate=[brand.place,examDateHuman(x)].filter(Boolean).join(', ')||examDateHuman(x);
  pdfText(doc,placeDate,20,H-12.5,6.5,'normal',muted);
  pdfText(doc,`Codice attestato ${code}`,W/2,H-12.5,6.5,'normal',muted,{align:'center'});
- pdfText(doc,brand.issuer,W-20,H-12.5,6.5,'bold',brand.dark,{align:'right'});
+ pdfFittedText(doc,brand.issuer,W-20,H-12.5,6.5,68,5,'bold',brand.dark,{align:'right'});
  await registerAndDownloadExamPdf(doc,x,'certificate',code);
 }
 async function generateSelectedDocument(){
