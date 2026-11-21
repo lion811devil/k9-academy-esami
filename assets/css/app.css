@@ -1143,7 +1143,7 @@ body.role-vice_admin #roleVisualIdentity{font-weight:800}
 
 .archived-session-row{opacity:.72;background:rgba(107,100,114,.05)}
 .archived-session-row .badge{background:#eee;color:#555}
-@media(max-width:720px){#sessionListCard table{min-width:760px}}
+.session-list-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 
 #profilePhotoDialog{
@@ -1523,8 +1523,9 @@ header .official-logo-placeholder{font-size:18px}
  #userRows tr:has(td[colspan]),#sessionRows tr:has(td[colspan]){display:block}
  #userRows td[colspan],#sessionRows td[colspan]{display:block;width:100%;border:0}
  #userRows td[colspan]::before,#sessionRows td[colspan]::before{display:none}
- #sessionListCard table{display:block;min-width:0!important;width:100%}
- #sessionListCard table thead{display:none}
+ .session-list-table-wrap{overflow-x:visible}
+ .session-list-table{display:block;min-width:0!important;max-width:100%;width:100%;table-layout:auto}
+ .session-list-table thead{display:none!important}
  #userManagementCard table{display:block;min-width:0!important;width:100%}
  #userManagementCard table thead{display:none}
 }
