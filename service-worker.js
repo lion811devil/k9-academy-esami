@@ -1,5 +1,5 @@
 const PREFIX='k9-academy-';
-const CACHE=PREFIX+'v22100-quadretto-pdf-20261127';
+const CACHE=PREFIX+'v22110-quadretto-ui-20261128';
 const CORE=['./','./index.html','./manifest.json','./assets/css/app.css','./assets/js/app.js','./icons/app-icon-192.png','./icons/app-icon-512.png'];
 const scope=new URL(self.registration.scope);
 const urls=new Set(CORE.map(path=>new URL(path,scope).href));
