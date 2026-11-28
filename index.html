@@ -1,4 +1,4 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>K9 Academy — Esami · Release 2.2.7</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>K9 Academy — Esami · Release 2.2.10</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 window.K9_CANDIDATE_BROWSER_MODE=new URLSearchParams(location.search).get('corsista')==='1';
@@ -39,7 +39,7 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
 
 
 
-<link rel="stylesheet" href="./assets/css/app.css?v=2270">
+<link rel="stylesheet" href="./assets/css/app.css?v=22100">
 </head><body>
 <header><div class="wrap"><div class="header-brand">
 <div id="officialLogoBox" class="official-logo-box" aria-label="Logo ufficiale">
@@ -137,7 +137,7 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
     <div class="stat-card user-dashboard-card"><span>Esaminatori</span><b id="dashExaminerUsers">—</b><button type="button" class="btn ghost dashboard-user-role" data-role="examiner">Gestisci Esaminatori</button></div>
     <div class="stat-card user-dashboard-card"><span>Corsisti</span><b id="dashStudentUsers">—</b><button type="button" class="btn ghost dashboard-user-role" data-role="student">Gestisci Corsisti</button></div>
   </div>
-</div></div><div class="card" id="assignExamCard"><h2>Assegna esame teorico</h2><p class="block-hint">Domande, timer e soglia vengono caricati per disciplina. Detection: attualmente solo 10 concetti medio/difficili distinti; per prove più lunghe occorrono nuove domande.</p><div class="grid"><label>Corsista<select id="studentSelect"></select></label><label>Disciplina<select id="assignDiscipline"><option value="dogsitter">Dogsitter</option><option value="mantrailing">Mantrailing</option><option value="hrdd">HRDD</option><option value="detection">Detection</option></select></label><label>Numero domande<select id="assignQuestions" class="compact-select"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40" selected>40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option><option value="60">60</option><option value="65">65</option><option value="70">70</option><option value="75">75</option><option value="80">80</option><option value="85">85</option><option value="90">90</option><option value="95">95</option><option value="100">100</option></select></label><label>Timer, minuti<select id="assignDuration" class="compact-select"><option value="5">5 min</option><option value="10">10 min</option><option value="15">15 min</option><option value="20">20 min</option><option value="25">25 min</option><option value="30">30 min</option><option value="35">35 min</option><option value="40">40 min</option><option value="45" selected>45 min</option><option value="50">50 min</option><option value="55">55 min</option><option value="60">60 min</option><option value="65">65 min</option><option value="70">70 min</option><option value="75">75 min</option><option value="80">80 min</option><option value="85">85 min</option><option value="90">90 min</option><option value="95">95 min</option><option value="100">100 min</option><option value="105">105 min</option><option value="110">110 min</option><option value="115">115 min</option><option value="120">120 min</option></select></label><label>Soglia di superamento %<select id="assignPass" class="compact-select"><option value="50">50%</option><option value="55">55%</option><option value="60" selected>60%</option><option value="65">65%</option><option value="70">70%</option><option value="75">75%</option><option value="80">80%</option><option value="85">85%</option><option value="90">90%</option><option value="95">95%</option><option value="100">100%</option></select></label><label>Note<textarea id="assignNotes"></textarea></label></div><br><button class="btn primary" id="assignBtn">Assegna al Corsista</button></div><div class="card" id="examManagementCard">
+</div></div><div class="card" id="assignExamCard"><h2>Assegna esame teorico</h2><p class="block-hint">Domande, timer e soglia vengono caricati per disciplina. Detection: attualmente solo 10 concetti medio/difficili distinti; per prove più lunghe occorrono nuove domande.</p><div class="grid"><label>Corsista<select id="studentSelect"></select></label><label>Disciplina<select id="assignDiscipline"><option value="dogsitter">Dogsitter</option><option value="mantrailing">Mantrailing</option><option value="hrdd">HRDD</option><option value="detection">Detection</option></select></label><label>Numero domande<select id="assignQuestions" class="compact-select"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40" selected>40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option><option value="60">60</option><option value="65">65</option><option value="70">70</option><option value="75">75</option><option value="80">80</option><option value="85">85</option><option value="90">90</option><option value="95">95</option><option value="100">100</option></select></label><label>Timer, minuti<select id="assignDuration" class="compact-select"><option value="5">5 min</option><option value="10">10 min</option><option value="15">15 min</option><option value="20">20 min</option><option value="25">25 min</option><option value="30">30 min</option><option value="35">35 min</option><option value="40">40 min</option><option value="45" selected>45 min</option><option value="50">50 min</option><option value="55">55 min</option><option value="60">60 min</option><option value="65">65 min</option><option value="70">70 min</option><option value="75">75 min</option><option value="80">80 min</option><option value="85">85 min</option><option value="90">90 min</option><option value="95">95 min</option><option value="100">100 min</option><option value="105">105 min</option><option value="110">110 min</option><option value="115">115 min</option><option value="120">120 min</option></select></label><label>Soglia di superamento %<select id="assignPass" class="compact-select"><option value="50">50%</option><option value="55">55%</option><option value="60" selected>60%</option><option value="65">65%</option><option value="70">70%</option><option value="75">75%</option><option value="80">80%</option><option value="85">85%</option><option value="90">90%</option><option value="95">95%</option><option value="100">100%</option></select></label><label id="assignRetryLimitWrap" class="hidden">Correzioni automatiche (0 = nessuna)<input id="assignRetryLimit" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="Predefinito"><small id="assignRetryDefaultInfo">Vuoto = limite predefinito; massimo pari alle domande.</small></label><label>Note<textarea id="assignNotes"></textarea></label></div><br><button class="btn primary" id="assignBtn">Assegna al Corsista</button><div id="retryDefaultWrap" class="hidden" style="margin-top:12px"><label>Limite predefinito (anche corsi collettivi)<input id="retryDefaultValue" type="number" min="0" max="200" step="1" inputmode="numeric"></label><button class="btn ghost" type="button" id="saveRetryDefaultBtn" disabled>Salva limite predefinito</button><p class="meta">Vale per le nuove prove. Se il limite supera il numero di domande, viene ridotto automaticamente.</p></div></div><div class="card" id="examManagementCard">
 <h2>Esami e valutazioni</h2>
 <div class="bar exam-management-toolbar" style="padding:0;border:0;margin-bottom:12px">
   <span class="block-hint">Premi “Apri scheda” per visualizzare teoria, pratica ed esito dello stesso esame.</span>
@@ -427,7 +427,7 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
 <input id="cfgLogoCameraFile" type="file" accept="image/*" capture="environment" hidden>
 
 <label>Testo accesso Corsista<input id="cfgStudentHelp" value="Usa le credenziali fornite dal Super Amministratore."></label>
-<label>Testo piè di pagina<input id="cfgFooterText" value="K9 Academy — Piattaforma esami · Release 2.2.7"></label>
+<label>Testo piè di pagina<input id="cfgFooterText" value="K9 Academy — Piattaforma esami · Release 2.2.10"></label>
 <label>Nome organizzazione<input id="cfgOrganization" value="K9 Academy"></label>
 </div>
 <div id="brandingStatus" class="status" style="margin:8px 0 12px"></div>
@@ -544,7 +544,7 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
   </form>
 </dialog>
 
-<footer class="wrap"><div class="status" id="appFooter">K9 Academy — Piattaforma esami · Release 2.2.7</div></footer></main>
+<footer class="wrap"><div class="status" id="appFooter">K9 Academy — Piattaforma esami · Release 2.2.10</div></footer></main>
 
 
 
@@ -564,5 +564,5 @@ if(window.K9_CANDIDATE_BROWSER_MODE){
 </form></dialog>
 
 
-<script src="./assets/js/app.js?v=2270"></script>
+<script src="./assets/js/app.js?v=22100"></script>
 </body></html>
