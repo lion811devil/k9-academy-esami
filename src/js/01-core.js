@@ -8,7 +8,7 @@ window.addEventListener('unhandledrejection',e=>{
 });
 let sb,user,profile,assignment,exam,tick,currentPractice=null,practiceValues={},professionalValues={},appSettings={},rolePermissions={},allRolePermissions={},currentQuestionIndex=0,examArchiveData=[],documentArchiveData=[],documentArchiveLoadPromise=null,documentArchiveLastOk=0,currentResultExam=null,analyticsLastUpdated=null,questionBankData=[];
 let examSettingsCache={},autoRefreshTimer=null,lastSessionCreatedId=null;
-const K9_AUTO_RETRY_MAX=3;
+const K9_LEGACY_AUTO_RETRY_MAX=3;
 let autoRetryUsed=0,autoRetryPositions=new Set(),autoRetryDeclinedPositions=new Set(),currentRetryPosition=null;
 const $=id=>document.getElementById(id);const questionValues=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100];
 const timerValues=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120];
@@ -590,6 +590,10 @@ function renderRoleHome(){
 }
 function applyRolePermissionsToUI(){
  if(!profile||profile.role==='student')return;
+ const retryAdmin=profile.role==='super_admin';
+ $('assignRetryLimitWrap')?.classList.toggle('hidden',!retryAdmin);
+ $('retryDefaultWrap')?.classList.toggle('hidden',!retryAdmin);
+ if(retryAdmin)loadRetryDefault().catch(e=>console.warn('Limite correzioni:',e.message));
  renderRoleHome();
  const dashboardUserTools=$('dashboardUserTools');if(dashboardUserTools)dashboardUserTools.classList.toggle('hidden',profile.role!=='super_admin');
  document.querySelectorAll('[data-embedded-permission]').forEach(section=>{const p=section.dataset.embeddedPermission;section.classList.toggle('permission-hidden',!!p&&!can(p))});
@@ -874,7 +878,7 @@ $('loginBtn').onclick=async()=>{
  }
 };$('logoutBtn').onclick=logoutSafely;
 
-const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.7',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
+const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.10',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
 function bool(v){return v===true||v==='true'}
 
 let brandingObjectUrls={logo:'',icon:''},dynamicManifestUrl='',officialLogoBlobUrl='';

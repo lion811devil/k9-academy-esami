@@ -51,7 +51,11 @@ async function loadAutoRetryState(){
  (data||[]).filter(x=>x.status==='accepted').forEach(x=>autoRetryPositions.add(Number(x.position)));
  autoRetryUsed=autoRetryPositions.size;
 }
-function autoRetryRemaining(){return Math.max(0,K9_AUTO_RETRY_MAX-autoRetryUsed)}
+function autoRetryLimit(){
+ const raw=exam?.auto_retry_limit;
+ return raw!==null&&raw!==undefined&&Number.isInteger(Number(raw))&&Number(raw)>=0?Math.min(Number(raw),Number(exam?.question_count)||200):Math.min(K9_LEGACY_AUTO_RETRY_MAX,Number(exam?.question_count)||200);
+}
+function autoRetryRemaining(){return Math.max(0,autoRetryLimit()-autoRetryUsed)}
 function nextUnansweredAfterCurrent(){
  const questions=exam?.questions||[];
  let next=questions.findIndex((x,i)=>i>currentQuestionIndex&&x.selected_option===null);
@@ -66,7 +70,7 @@ function beginAutoRetry(position){
  const pos=Number(position),q=(exam?.questions||[]).find(x=>Number(x.position)===pos);
  if(!q||q.is_correct||q.selected_option===null)return;
  if(autoRetryPositions.has(pos))return note('La correzione automatica è già stata utilizzata per questa domanda.',true);
- if(autoRetryRemaining()<=0)return note('Hai già utilizzato le 3 correzioni automatiche disponibili.',true);
+ if(autoRetryRemaining()<=0)return note('Limite di correzioni automatiche raggiunto.',true);
  currentRetryPosition=pos;
  renderExam();
 }
@@ -103,19 +107,21 @@ function renderExam(){
  if(!questions.length){$('questions').innerHTML='<div class="card">Nessuna domanda disponibile.</div>';return}
  currentQuestionIndex=Math.max(0,Math.min(currentQuestionIndex,questions.length-1));
  const q=questions[currentQuestionIndex],pos=Number(q.position);
+ const quadrettoLabel=({1:'Domanda diretta',2:'Vero o Falso',3:'Affermazione corretta',4:'Affermazione errata'})[Number(q.quadretto_mode)]||'';
  const retryMode=currentRetryPosition===pos&&!q.is_correct&&!autoRetryPositions.has(pos)&&autoRetryRemaining()>0;
  const canOfferRetry=q.selected_option!==null&&!q.is_correct&&!autoRetryPositions.has(pos)&&!autoRetryDeclinedPositions.has(pos)&&autoRetryRemaining()>0;
  const retryFinished=autoRetryPositions.has(pos);
  $('questions').innerHTML=`<article class="q card" data-pos="${q.position}">
    <div class="meta">${k9EscapeHtml(q.category)}</div>
-   <h3>${q.position}. ${k9EscapeHtml(q.question_text)}</h3>
+   ${quadrettoLabel?`<div class="meta" style="margin-top:5px"><span class="badge">${k9EscapeHtml(quadrettoLabel)}</span></div>`:''}
+   <h3${quadrettoLabel?' style="white-space:pre-line"':''}>${q.position}. ${k9EscapeHtml(q.question_text)}</h3>
    <div class="options">
      ${q.options.map((o,i)=>{let cls='';if(q.selected_option!==null&&q.selected_option===i)cls=q.is_correct?'correct':'wrong';const disabled=retryMode?'':(q.selected_option!==null?'disabled':'');return `<button class="opt ${cls}" data-i="${i}" ${disabled}>${String.fromCharCode(65+i)}. ${k9EscapeHtml(o)}</button>`}).join('')}
    </div>
    ${q.selected_option!==null?`<div class="feedback ${q.is_correct?'ok':'err'}">${q.is_correct?'Risposta corretta':'Risposta errata'}</div>`:''}
-   ${retryMode?`<div class="card" style="margin-top:10px;background:#fff7ed;border-color:#fdba74"><b>Correzione automatica ${autoRetryUsed+1} di ${K9_AUTO_RETRY_MAX}</b><div class="meta" style="margin-top:4px">Seleziona nuovamente una risposta. Questo secondo tentativo sarà registrato automaticamente.</div></div>`:''}
-   ${canOfferRetry&&!retryMode?`<div class="card" style="margin-top:10px;background:#fff7ed;border-color:#fdba74"><b>Vuoi ripetere la risposta?</b><div class="meta" style="margin:5px 0 10px">Puoi usare la correzione automatica su massimo ${K9_AUTO_RETRY_MAX} domande. Te ne restano ${autoRetryRemaining()}.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" onclick="beginAutoRetry(${q.position})">Sì, ripeti</button><button class="btn ghost" type="button" onclick="declineAutoRetry(${q.position})">No, continua</button></div></div>`:''}
-   ${retryFinished?`<div class="meta" style="margin-top:9px"><b>Correzione automatica registrata.</b> Questa domanda ha utilizzato uno dei ${K9_AUTO_RETRY_MAX} tentativi consentiti.</div>`:''}
+   ${retryMode?`<div class="card" style="margin-top:10px;background:#fff7ed;border-color:#fdba74"><b>Correzione automatica ${autoRetryUsed+1} di ${autoRetryLimit()}</b><div class="meta" style="margin-top:4px">Seleziona nuovamente una risposta. Questo secondo tentativo sarà registrato automaticamente.</div></div>`:''}
+   ${canOfferRetry&&!retryMode?`<div class="card" style="margin-top:10px;background:#fff7ed;border-color:#fdba74"><b>Vuoi ripetere la risposta?</b><div class="meta" style="margin:5px 0 10px">Puoi usare la correzione automatica su massimo ${autoRetryLimit()} domande. Te ne restano ${autoRetryRemaining()}.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" onclick="beginAutoRetry(${q.position})">Sì, ripeti</button><button class="btn ghost" type="button" onclick="declineAutoRetry(${q.position})">No, continua</button></div></div>`:''}
+   ${retryFinished?`<div class="meta" style="margin-top:9px"><b>Correzione automatica registrata.</b> Questa domanda ha utilizzato uno dei ${autoRetryLimit()} tentativi consentiti.</div>`:''}
  </article>`;
  $('questions').querySelectorAll('.opt:not(:disabled)').forEach(b=>b.onclick=retryMode?retryAnswer:answer);
  updateQuestionNavigator();
@@ -246,6 +252,26 @@ function renderCourseStudentList(students){const box=$('courseStudentList');if(!
 $('selectAllCourseStudents')?.addEventListener('click',()=>{document.querySelectorAll('#courseStudentList input[type=checkbox]').forEach(x=>x.checked=true);updateCourseStudentCount()});
 $('clearCourseStudents')?.addEventListener('click',()=>{document.querySelectorAll('#courseStudentList input[type=checkbox]').forEach(x=>x.checked=false);updateCourseStudentCount()});
 $('studentSelect').onchange=()=>setInvalid($('studentSelect'),!isUuid($('studentSelect').value));
+let retryDefaultLoadedFor=null,retryDefaultLoading=false;
+function readRetryLimit(value,max){const s=String(value??'').trim();return /^\d+$/.test(s)&&Number.isSafeInteger(Number(s))&&Number(s)<=max?Number(s):null;}
+function showRetryDefault(n){
+ if($('retryDefaultValue'))$('retryDefaultValue').value=String(n);
+ if($('assignRetryDefaultInfo'))$('assignRetryDefaultInfo').textContent=`Vuoto = predefinito (${n}); massimo pari alle domande.`;
+}
+async function loadRetryDefault(){
+ if(profile?.role!=='super_admin'||!user?.id||retryDefaultLoadedFor===user.id||retryDefaultLoading)return;
+ retryDefaultLoading=true;const uid=user.id;
+ try{const {data,error}=await sb.rpc('k9_get_retry_default');if(error)throw error;if(user?.id!==uid||profile?.role!=='super_admin')return;showRetryDefault(data);retryDefaultLoadedFor=uid;$('saveRetryDefaultBtn').disabled=false;}
+ finally{retryDefaultLoading=false;}
+}
+$('saveRetryDefaultBtn').onclick=async()=>{
+ if(profile?.role!=='super_admin')return;
+ const n=readRetryLimit($('retryDefaultValue').value,200);if(n===null)return note('Inserisci un numero intero da 0 a 200.',true);
+ $('saveRetryDefaultBtn').disabled=true;
+ try{const{data,error}=await sb.rpc('k9_set_retry_default',{p_limit:n});if(error)throw error;showRetryDefault(data);saveNote('Limite predefinito salvato per le nuove prove.');}
+ catch(e){note(e.message,true)}finally{$('saveRetryDefaultBtn').disabled=false;}
+};
+$('assignQuestions').addEventListener('change',()=>{$('assignRetryLimit').max=$('assignQuestions').value;});
 $('assignBtn').onclick=async()=>{
  if(!requirePermission('assign_exam','Assegnazione esami non abilitata per questo ruolo.'))return;
  if(profile?.role==='super_admin'&&!validateQuestionAvailability($('assignDiscipline').value,$('assignQuestions').value))return;
@@ -254,8 +280,13 @@ $('assignBtn').onclick=async()=>{
  if(!isUuid(studentId))return note('Seleziona un Corsista valido prima di assegnare l’esame.',true);
  if(!questions||!duration||!pass)return note('Controlla numero di domande, timer e soglia di superamento.',true);
  $('assignBtn').disabled=true;
- const{error}=await sb.rpc('assign_exam',{p_student_id:studentId,p_discipline:$('assignDiscipline').value,p_question_count:questions,p_duration_minutes:duration,p_pass_percentage:pass,p_notes:$('assignNotes').value.trim()||null});
- $('assignBtn').disabled=false;if(error)note(error.message,true);else saveNote('Salvataggio completato — esame assegnato correttamente.');if(!error){clearUiDraftFields(['studentSelect','assignNotes']);$('assignNotes').value='';await Promise.all([loadExams(),loadDashboard()])}
+ const raw=profile?.role==='super_admin'?$('assignRetryLimit').value.trim():'';
+ const retryLimit=raw===''?null:readRetryLimit(raw,questions);
+ if(raw!==''&&retryLimit===null){$('assignBtn').disabled=false;return note(`Inserisci un numero intero da 0 a ${questions} per le correzioni.`,true);}
+ const params={p_student_id:studentId,p_discipline:$('assignDiscipline').value,p_question_count:questions,p_duration_minutes:duration,p_pass_percentage:pass,p_notes:$('assignNotes').value.trim()||null};
+ if(retryLimit!==null)params.p_retry_limit=retryLimit;
+ const{error}=await sb.rpc(retryLimit===null?'assign_exam':'k9_assign_exam_with_retry',params);
+ $('assignBtn').disabled=false;if(error)note(error.message,true);else saveNote('Salvataggio completato — esame assegnato correttamente.');if(!error){clearUiDraftFields(['studentSelect','assignNotes','assignRetryLimit']);$('assignNotes').value='';$('assignRetryLimit').value='';await Promise.all([loadExams(),loadDashboard()])}
 };
 async function loadDashboard(){
  if(!sb||!profile||profile.role==='student'||!can('dashboard'))return;
