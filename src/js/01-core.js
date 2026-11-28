@@ -304,7 +304,6 @@ function consolidateExamWorkflowLayout(){
    while(source.firstChild)wrap.appendChild(source.firstChild);
    target.appendChild(wrap);source.remove();
  };
- const legacy=$('assignExamCard');if(legacy&&can('sessions_manage')){legacy.dataset.navExclude='1';legacy.classList.add('workflow-legacy-hidden');legacy.setAttribute('aria-hidden','true')}
  embed('sessionListCard','sessionCreateCard','Corsi preparati','Gestisci, archivia o elimina i corsi già creati senza uscire dalla preparazione.','sessions_manage');
  embed('examArchiveCard','examManagementCard','Storico esami','Consulta le prove concluse e i relativi esiti nello stesso ambiente di valutazione.','exam_history');
  embed('documentArchiveCard','documentsCard','Archivio documenti','Consulta verbali, report dettagliati e attestati già generati.','document_archive');
@@ -637,6 +636,7 @@ function applyRolePermissionsToUI(){
 function visibleAppPages(){
  return [...document.querySelectorAll('.app-page')].filter(page=>{
    if(page.dataset.navExclude==='1')return false;
+   if(page.id==='assignExamCard'&&profile?.role!=='super_admin'&&can('sessions_manage'))return false;
    if(page.id==='roleHomeCard'&&profile?.role!=='super_admin')return false;
    if(page.classList.contains('permission-hidden'))return false;
    if(page.classList.contains('super-only')&&profile?.role!=='super_admin')return false;
@@ -649,7 +649,7 @@ function visibleAppPages(){
 function pageMenuCategory(title){
  const t=String(title||'');
  if(['Area personale','Dashboard','Statistiche'].includes(t))return 'Panoramica';
- if(['Corsisti','Corsi','Esami e valutazioni','Documenti e archivio'].includes(t))return 'Percorso esame';
+ if(['Corsisti','Corsi','Assegna prova singola','Esami e valutazioni','Documenti e archivio'].includes(t))return 'Percorso esame';
  if(['Banca domande'].includes(t))return 'Banca esame';
  if(['Crea utente','Gestione utenti','Ruoli e permessi'].includes(t))return 'Utenti';
  return 'Configurazione';
@@ -687,7 +687,7 @@ function refreshSideNavigation(){
  if(!workspace||!nav||!profile)return;
  workspace.classList.remove('hidden');
  const pages=visibleAppPages();
- const pageOrder=['Area personale','Dashboard','Corsisti','Corsi','Esami e valutazioni','Documenti e archivio','Banca domande','Statistiche','Crea utente','Gestione utenti','Ruoli e permessi','Impostazioni'];
+ const pageOrder=['Area personale','Dashboard','Corsisti','Corsi','Assegna prova singola','Esami e valutazioni','Documenti e archivio','Banca domande','Statistiche','Crea utente','Gestione utenti','Ruoli e permessi','Impostazioni'];
  const ordered=[...pages].sort((a,b)=>{
    const ai=pageOrder.indexOf(a.dataset.pageTitle),bi=pageOrder.indexOf(b.dataset.pageTitle);
    return (ai<0?999:ai)-(bi<0?999:bi);
@@ -878,7 +878,7 @@ $('loginBtn').onclick=async()=>{
  }
 };$('logoutBtn').onclick=logoutSafely;
 
-const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.10',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
+const defaultAppSettings={app_name:'K9 Academy',app_subtitle:'Dogsitter · Mantrailing · HRDD · Detection',organization_name:'K9 Academy',logo_url:'',footer_text:'K9 Academy — Piattaforma esami · Release 2.2.11',student_help_text:'Usa le credenziali fornite dal Super Amministratore.',primary_color:'#5b21b6',header_color:'#35106f',background_color:'#f5f3f8',card_color:'#ffffff',theme:'light',density:'comfortable',corners:'rounded',max_width:1150,show_result:true,immediate_feedback:true,show_explanation:true,confirm_submit:true,timer_warning_minutes:5,teacher_can_assign:true,allow_mistap_report:true,doc_issuer_name:'K9 Academy',doc_issue_place:'',doc_signer_name:'',doc_signer_role:'',icon_192_url:'',icon_512_url:'',branding_bucket:'branding',logo_path:''};
 function bool(v){return v===true||v==='true'}
 
 let brandingObjectUrls={logo:'',icon:''},dynamicManifestUrl='',officialLogoBlobUrl='';
